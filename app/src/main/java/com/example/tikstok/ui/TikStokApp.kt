@@ -1,5 +1,10 @@
 package com.example.tikstok.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -15,8 +20,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +43,8 @@ import com.example.tikstok.ui.account.AccountScreen
 import com.example.tikstok.ui.invest.InvestScreen
 import com.example.tikstok.ui.invest.formatUsd
 import com.example.tikstok.ui.portfolio.PortfolioScreen
+import kotlinx.coroutines.delay
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,11 +58,37 @@ fun TikStokApp() {
             TopAppBar(
                 // Session cash for now; moves to the active profile once Firestore/Room land.
                 title = {
-                    Text(
-                        text = "$" + formatUsd(PortfolioStore.cash),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "$" + formatUsd(PortfolioStore.cash),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        val delta = PortfolioStore.lastTradeDelta
+                        val ts = PortfolioStore.lastTradeTimestamp
+                        if (delta != null) {
+                            var visible by remember(ts) { mutableStateOf(true) }
+                            LaunchedEffect(ts) {
+                                delay(2000)
+                                visible = false
+                            }
+                            AnimatedVisibility(
+                                visible = visible,
+                                enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 }),
+                                exit = fadeOut()
+                            ) {
+                                val color = if (delta >= 0) Color(0xFF22C55E) else Color(0xFFEF4444)
+                                val sign = if (delta >= 0) "+" else "-"
+                                Text(
+                                    text = " ($sign$" + formatUsd(abs(delta)) + ")",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = color,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 6.dp)
+                                )
+                            }
+                        }
+                    }
                 },
                 actions = {
                     // TODO: open the profile switcher; placeholder until profiles exist.

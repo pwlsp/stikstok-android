@@ -19,6 +19,11 @@ object PortfolioStore {
     var cash by mutableStateOf(1_000.0)
         private set
 
+    var lastTradeDelta by mutableStateOf<Double?>(null)
+        private set
+    var lastTradeTimestamp by mutableStateOf(0L)
+        private set
+
     private val holdings = mutableStateMapOf<String, Holding>()
 
     fun holding(symbol: String): Holding? = holdings[symbol]
@@ -35,6 +40,8 @@ object PortfolioStore {
         else (prev.quantity * prev.avgCost + units * price) / newQty
         holdings[symbol] = Holding(newQty, newAvg)
         cash -= spend
+        lastTradeDelta = -spend
+        lastTradeTimestamp = System.currentTimeMillis()
     }
 
     /** Sell up to [amount] USD worth of [symbol] at [price] per unit. */
@@ -47,5 +54,7 @@ object PortfolioStore {
         val remaining = h.quantity - units
         if (remaining <= 1e-9) holdings.remove(symbol) else holdings[symbol] = h.copy(quantity = remaining)
         cash += sellValue
+        lastTradeDelta = sellValue
+        lastTradeTimestamp = System.currentTimeMillis()
     }
 }
