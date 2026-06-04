@@ -129,17 +129,10 @@ fun CandlestickChart(
                 val centerPaint = Paint(labelPaint).apply { textAlign = Paint.Align.CENTER }
                 val rightPaint = Paint(labelPaint).apply { textAlign = Paint.Align.RIGHT }
 
-                // Horizontal grid + price labels. Labels are left-aligned so they never clip off
-                // the left edge; instead they may overlap the plot on their right.
+                // Horizontal grid lines behind the plot.
                 listOf(max, (max + min) / 2f, min).forEach { price ->
                     val y = yAt(price)
                     drawLine(gridColor, Offset(plotLeft, y), Offset(plotLeft + plotWidth, y), 1f)
-                    drawContext.canvas.nativeCanvas.drawText(
-                        formatPrice(price),
-                        labelX,
-                        y + labelPaint.textSize / 3f,
-                        leftPaint,
-                    )
                 }
 
                 // Time labels pinned to the left / center / right of the viewport, aligned so they
@@ -204,6 +197,18 @@ fun CandlestickChart(
                             )
                         }
                     }
+                }
+
+                // Price labels drawn after the plot so they appear above the graph, ensuring they are
+                // not obscured if they overlap the left edge of the chart.
+                listOf(max, (max + min) / 2f, min).forEach { price ->
+                    val y = yAt(price)
+                    drawContext.canvas.nativeCanvas.drawText(
+                        formatPrice(price),
+                        labelX,
+                        y + labelPaint.textSize / 3f,
+                        leftPaint,
+                    )
                 }
             }
 

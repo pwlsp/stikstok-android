@@ -99,9 +99,6 @@ fun LineChart(
         listOf(hi, (hi + lo) / 2f, lo).forEach { price ->
             val y = yAt(price)
             drawLine(gridColor, Offset(plotLeft, y), Offset(plotLeft + plotW, y), 1f)
-            drawContext.canvas.nativeCanvas.drawText(
-                formatPrice(price), labelX, y + labelPaint.textSize / 3f, leftPaint,
-            )
         }
 
         val baseY = size.height - 6f
@@ -132,6 +129,14 @@ fun LineChart(
             val sx = xAt(selected)
             drawLine(crosshairColor, Offset(sx, topPad), Offset(sx, topPad + plotH), 2f)
             drawCircle(lineColor, radius = strokePx * 1.6f, center = Offset(sx, yAt(candles[selected].close)))
+        }
+
+        // Draw price labels last so they are above the graph
+        listOf(hi, (hi + lo) / 2f, lo).forEach { price ->
+            val y = yAt(price)
+            drawContext.canvas.nativeCanvas.drawText(
+                formatPrice(price), labelX, y + labelPaint.textSize / 3f, leftPaint,
+            )
         }
     }
 }
