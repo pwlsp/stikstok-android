@@ -258,20 +258,21 @@ private fun OhlcReadout(candle: Candle?, timeframe: Timeframe, modifier: Modifie
             fontWeight = FontWeight.Medium,
         )
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            OhlcItem(stringResource(R.string.ohlc_open), candle?.open)
-            OhlcItem(stringResource(R.string.ohlc_high), candle?.high)
-            OhlcItem(stringResource(R.string.ohlc_low), candle?.low)
-            OhlcItem(
-                label = stringResource(R.string.ohlc_close),
-                value = candle?.close,
-                valueColor = candle?.let { if (it.close >= it.open) UpColor else DownColor },
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                OhlcItem(stringResource(R.string.ohlc_open), candle?.open)
+                OhlcItem(stringResource(R.string.ohlc_low), candle?.low)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                OhlcItem(
+                    label = stringResource(R.string.ohlc_close),
+                    value = candle?.close,
+                    valueColor = candle?.let { if (it.close >= it.open) UpColor else DownColor },
+                )
+                OhlcItem(stringResource(R.string.ohlc_high), candle?.high)
+            }
         }
     }
 }
