@@ -30,6 +30,9 @@
     <string name="trade_you_receive">Otrzymasz</string>
     <string name="trade_swipe_buy">Przesuń, aby kupić %1$s</string>
     <string name="trade_swipe_sell">Przesuń, aby sprzedać %1$s</string>
+    <string name="trade_hint_select_amount">Wybierz kwotę</string>
+    <string name="trade_hint_no_cash">Brak gotówki</string>
+    <string name="trade_hint_nothing_to_sell">Nic do sprzedania</string>
     <string name="trade_practice_mode">Tryb ćwiczeniowy — bez prawdziwych pieniędzy</string>
     <!-- OHLC readout labels (single-letter, universal) -->
     <string name="ohlc_open">O</string>

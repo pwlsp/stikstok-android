@@ -132,7 +132,6 @@ fun TradeSheet(
                 enabled = canConfirm,
                 onConfirm = {
                     if (side == TradeSide.BUY) onBuy(clamped) else onSell(clamped)
-                    onDismiss()
                 },
             )
             Spacer(Modifier.height(12.dp))
@@ -435,37 +434,42 @@ private fun SwipeToConfirm(label: String, color: Color, enabled: Boolean, onConf
 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(label, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            if (enabled) {
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            }
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(pad)
-                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
-                .size(knob)
-                .clip(CircleShape)
-                .background(Color.White)
-                .pointerInput(enabled, maxOffsetPx) {
-                    if (!enabled) return@pointerInput
-                    detectHorizontalDragGestures(
-                        onDragEnd = {
-                            if (offsetX.value >= maxOffsetPx * 0.9f) {
-                                onConfirm()
-                            } else {
-                                scope.launch { offsetX.animateTo(0f) }
+        if (enabled) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(pad)
+                    .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                    .size(knob)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .pointerInput(enabled, maxOffsetPx) {
+                        if (!enabled) return@pointerInput
+                        detectHorizontalDragGestures(
+                            onDragEnd = {
+                                if (offsetX.value >= maxOffsetPx * 0.9f) {
+                                    onConfirm()
+                                    scope.launch { offsetX.snapTo(0f) }
+                                } else {
+                                    scope.launch { offsetX.animateTo(0f) }
+                                }
+                            },
+                        ) { change, dragAmount ->
+                            change.consume()
+                            scope.launch {
+                                offsetX.snapTo((offsetX.value + dragAmount).coerceIn(0f, maxOffsetPx))
                             }
-                        },
-                    ) { change, dragAmount ->
-                        change.consume()
-                        scope.launch {
-                            offsetX.snapTo((offsetX.value + dragAmount).coerceIn(0f, maxOffsetPx))
                         }
-                    }
-                },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
+            }
         }
     }
 }

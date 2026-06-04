@@ -32,6 +32,9 @@
     <string name="trade_you_receive">You\'ll receive</string>
     <string name="trade_swipe_buy">Swipe to buy %1$s</string>
     <string name="trade_swipe_sell">Swipe to sell %1$s</string>
+    <string name="trade_hint_select_amount">Select amount</string>
+    <string name="trade_hint_no_cash">Not enough cash</string>
+    <string name="trade_hint_nothing_to_sell">Nothing to sell</string>
     <string name="trade_practice_mode">Practice mode — no real money at risk</string>
     <!-- OHLC readout labels (single-letter, universal) -->
     <string name="ohlc_open">O</string>
