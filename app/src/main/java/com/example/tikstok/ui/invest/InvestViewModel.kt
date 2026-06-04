@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tikstok.data.portfolio.Holding
+import com.example.tikstok.data.portfolio.PortfolioStore
 import com.example.tikstok.data.repository.MarketRepository
 import com.example.tikstok.model.Asset
 import com.example.tikstok.model.Assets
@@ -62,6 +64,27 @@ class InvestViewModel : ViewModel() {
     fun toggleChartMode() {
         val next = if (uiState.chartMode == ChartMode.CANDLES) ChartMode.LINE else ChartMode.CANDLES
         uiState = uiState.copy(chartMode = next)
+    }
+
+    // --- Trading (session-only, in-memory portfolio) ---
+
+    /** Spendable virtual cash. Snapshot-backed, so reading it in composition stays live. */
+    val cash: Double get() = PortfolioStore.cash
+
+    /** Latest traded price for the current asset, or null while data is still loading. */
+    val currentPrice: Double? get() = uiState.candles.lastOrNull()?.close?.toDouble()
+
+    /** The user's current position in the selected asset. */
+    fun holding(): Holding? = PortfolioStore.holding(uiState.asset.symbol)
+
+    fun buy(amountUsd: Double) {
+        val price = currentPrice ?: return
+        PortfolioStore.buy(uiState.asset.symbol, price, amountUsd)
+    }
+
+    fun sell(amountUsd: Double) {
+        val price = currentPrice ?: return
+        PortfolioStore.sell(uiState.asset.symbol, price, amountUsd)
     }
 
     fun reload() {

@@ -19,6 +19,18 @@
     <string name="cd_change_asset">Zmień aktywo</string>
     <string name="invest_show_line">Wykres liniowy</string>
     <string name="invest_show_candles">Wykres świecowy</string>
+
+    <!-- Trade dialog -->
+    <string name="trade_you_own">Posiadasz</string>
+    <string name="trade_max">MAX</string>
+    <string name="trade_price">Cena</string>
+    <string name="trade_units">Jednostki</string>
+    <string name="trade_total_cost">Koszt</string>
+    <string name="trade_potential_profit">Potencjalny zysk</string>
+    <string name="trade_you_receive">Otrzymasz</string>
+    <string name="trade_swipe_buy">Przesuń, aby kupić %1$s</string>
+    <string name="trade_swipe_sell">Przesuń, aby sprzedać %1$s</string>
+    <string name="trade_practice_mode">Tryb ćwiczeniowy — bez prawdziwych pieniędzy</string>
     <!-- OHLC readout labels (single-letter, universal) -->
     <string name="ohlc_open">O</string>
     <string name="ohlc_high">H</string>

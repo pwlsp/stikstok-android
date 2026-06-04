@@ -26,9 +26,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.tikstok.R
+import com.example.tikstok.data.portfolio.PortfolioStore
 import com.example.tikstok.navigation.TikStokDestination
 import com.example.tikstok.ui.account.AccountScreen
 import com.example.tikstok.ui.invest.InvestScreen
+import com.example.tikstok.ui.invest.formatUsd
 import com.example.tikstok.ui.portfolio.PortfolioScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,10 +43,10 @@ fun TikStokApp() {
     Scaffold(
         topBar = {
             TopAppBar(
-                // TODO: balance comes from the active profile once data is wired up.
+                // Session cash for now; moves to the active profile once Firestore/Room land.
                 title = {
                     Text(
-                        text = "$1,000.00",
+                        text = "$" + formatUsd(PortfolioStore.cash),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )

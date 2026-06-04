@@ -52,6 +52,7 @@ fun InvestScreen(
 ) {
     val state = viewModel.uiState
     var showPicker by remember { mutableStateOf(false) }
+    var tradeSide by remember { mutableStateOf<TradeSide?>(null) }
 
     Column(
         modifier = modifier
@@ -76,7 +77,12 @@ fun InvestScreen(
         Spacer(Modifier.height(16.dp))
         AssetHeader(state = state, onClick = { showPicker = true }, modifier = sidePadding)
         Spacer(Modifier.weight(1f))
-        TradeButtons(modifier = sidePadding)
+        TradeButtons(
+            enabled = state.candles.isNotEmpty(),
+            onBuy = { tradeSide = TradeSide.BUY },
+            onSell = { tradeSide = TradeSide.SELL },
+            modifier = sidePadding,
+        )
     }
 
     if (showPicker) {
@@ -85,6 +91,29 @@ fun InvestScreen(
             // Keep the sheet open; the chart behind it updates live as assets are tapped.
             onSelect = { viewModel.selectAsset(it) },
             onDismiss = { showPicker = false },
+        )
+    }
+
+    val side = tradeSide
+    val price = viewModel.currentPrice
+    if (side != null && price != null) {
+        val first = state.candles.firstOrNull()
+        val latest = state.candles.lastOrNull()
+        val changePct = if (latest != null && first != null && first.open != 0f) {
+            (latest.close - first.open) / first.open * 100f
+        } else {
+            0f
+        }
+        TradeSheet(
+            asset = state.asset,
+            price = price,
+            changePct = changePct,
+            initialSide = side,
+            cash = viewModel.cash,
+            holding = viewModel.holding(),
+            onBuy = viewModel::buy,
+            onSell = viewModel::sell,
+            onDismiss = { tradeSide = null },
         )
     }
 }
@@ -289,20 +318,27 @@ private fun TimeframeSelector(
 }
 
 @Composable
-private fun TradeButtons(modifier: Modifier = Modifier) {
+private fun TradeButtons(
+    enabled: Boolean,
+    onBuy: () -> Unit,
+    onSell: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Button(
-            onClick = { /* TODO: open the trade screen */ },
+            onClick = onBuy,
+            enabled = enabled,
             modifier = Modifier.weight(1f),
             colors = ButtonDefaults.buttonColors(containerColor = UpColor),
         ) {
             Text(stringResource(R.string.invest_buy))
         }
         Button(
-            onClick = { /* TODO: open the trade screen */ },
+            onClick = onSell,
+            enabled = enabled,
             modifier = Modifier.weight(1f),
             colors = ButtonDefaults.buttonColors(containerColor = DownColor),
         ) {

@@ -41,7 +41,7 @@ Dependencies are managed via version catalog at `gradle/libs.versions.toml`. Wir
 
 ## Architecture
 
-MVVM with a repository layer, single-module for now. Implemented: the navigation skeleton, the localization layer, and the **Invest** screen end-to-end (asset picker → ViewModel → repository → Yahoo client → candlestick chart). The `auth/` and `trade/` packages, Firebase, Room, and the Portfolio/Account features are still to be built.
+MVVM with a repository layer, single-module for now. Implemented: the navigation skeleton, the localization layer, the **Invest** screen end-to-end (asset picker → ViewModel → repository → Yahoo client → candlestick chart), and the **buy/sell trade dialog** backed by a session-only in-memory portfolio. The `auth/` package, Firebase, Room, and the Portfolio/Account features are still to be built.
 
 ```
 app/src/main/java/com/example/tikstok/
@@ -49,9 +49,8 @@ app/src/main/java/com/example/tikstok/
 ├── ui/
 │   ├── TikStokApp.kt  # Root Scaffold: shared top bar + NavigationBar + NavHost
 │   ├── components/    # Shared composables (PlaceholderContent, ...)
-│   ├── invest/        # InvestScreen + InvestViewModel, CandlestickChart (Canvas),
-│   │                  #   AssetPickerSheet, PriceFormat helpers
-│   ├── trade/         # Buy/sell screen (+ ViewModel — TODO)
+│   ├── invest/        # InvestScreen + InvestViewModel, CandlestickChart/LineChart (Canvas),
+│   │                  #   AssetPickerSheet, TradeDialog (buy/sell), PriceFormat helpers
 │   ├── portfolio/     # Portfolio & holdings screen (+ ViewModel — TODO)
 │   ├── account/       # Profile list, settings + language switcher
 │   └── theme/         # Color, Type, Theme
@@ -60,13 +59,16 @@ app/src/main/java/com/example/tikstok/
 ├── locale/            # AppLanguage enum + LocaleHelper (per-app locale)
 ├── data/
 │   ├── remote/yahoo/  # YahooFinanceService (HttpURLConnection + org.json), PriceSeries
-│   └── repository/    # MarketRepository (suspend, Dispatchers.IO)
+│   ├── repository/    # MarketRepository (suspend, Dispatchers.IO)
+│   └── portfolio/     # PortfolioStore (in-memory cash + holdings, snapshot state)
 └── model/             # Asset/AssetType/Assets catalog, Candle, Timeframe
 ```
 
 The candlestick chart is custom `Canvas`, not Vico (the drag-to-preview-OHLC crosshair is awkward on Vico's tooltip markers). Press-and-drag scrubs a crosshair and reports the candle index, so the OHLC readout shows that point's exact values. Each candle has a minimum width, so dense ranges (e.g. 5y) overflow the viewport and scroll horizontally via a draggable scrollbar under the chart — panning lives on the scrollbar, scrubbing on the chart, and the visible window sets the price scale. Timeframes from 1d up (`Timeframe.isScrollable`) carry more candles than fit; they show a candles/line toggle at the top-right of the readout (`ChartMode` in state), where `LineChart` is the non-scrolling whole-range overview. `Timeframe` maps each selector chip to a Yahoo `range`/`interval` (+ optional trim). Adding an asset = a line in `model/Asset.kt`'s `Assets` catalog.
 
-Tabs are switched via `NavHostController.navigateToTab` in `TikStokApp.kt` (single back-stack entry per tab with `saveState`/`restoreState`). Add new top-level tabs by extending the `TikStokDestination` enum; add detail screens (trade, transaction history) as extra `composable` routes in the same `NavHost`.
+The buy/sell flow (slide 6) is a Compose `Dialog` — `TradeDialog` in `ui/invest/`. The Buy/Sell buttons open it with a side preselected; it has a BUY/SELL toggle, a big dollar amount driven by a `Slider` + $10/$25/$50/$100/MAX `FilterChip`s, the asset-unit equivalent, a YOU OWN row, a price/profit/total summary, and a custom drag-the-knob `SwipeToConfirm`. It reads/writes `data/portfolio/PortfolioStore` — a session-only singleton holding `cash` + a `symbol → Holding(quantity, avgCost)` map in Compose snapshot state (resets on process death; Firestore/Room come later). MAX = cash for buys, position value for sells; sell P/L uses the holding's average cost.
+
+Tabs are switched via `NavHostController.navigateToTab` in `TikStokApp.kt` (single back-stack entry per tab with `saveState`/`restoreState`). Add new top-level tabs by extending the `TikStokDestination` enum; add detail screens (transaction history) as extra `composable` routes in the same `NavHost`.
 
 ## Key Domain Concepts
 

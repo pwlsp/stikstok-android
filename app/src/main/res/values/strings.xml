@@ -21,6 +21,18 @@
     <string name="cd_change_asset">Change asset</string>
     <string name="invest_show_line">Line chart</string>
     <string name="invest_show_candles">Candlestick chart</string>
+
+    <!-- Trade dialog -->
+    <string name="trade_you_own">You own</string>
+    <string name="trade_max">MAX</string>
+    <string name="trade_price">Price</string>
+    <string name="trade_units">Units</string>
+    <string name="trade_total_cost">Total cost</string>
+    <string name="trade_potential_profit">Potential profit</string>
+    <string name="trade_you_receive">You\'ll receive</string>
+    <string name="trade_swipe_buy">Swipe to buy %1$s</string>
+    <string name="trade_swipe_sell">Swipe to sell %1$s</string>
+    <string name="trade_practice_mode">Practice mode — no real money at risk</string>
     <!-- OHLC readout labels (single-letter, universal) -->
     <string name="ohlc_open">O</string>
     <string name="ohlc_high">H</string>

@@ -18,6 +18,22 @@ fun formatPrice(value: Float): String = when {
 
 fun formatSignedPercent(percent: Float): String = "%+.2f%%".format(percent)
 
+/** A USD amount, always two decimals with thousands separators, e.g. "1,001.92". */
+fun formatUsd(value: Double): String = "%,.2f".format(Locale.US, value)
+
+/** A signed USD amount for P/L readouts, e.g. "+$7.42" / "-$0.43". */
+fun formatSignedUsd(value: Double): String {
+    val sign = if (value >= 0) "+" else "-"
+    return "$sign$%,.2f".format(Locale.US, kotlin.math.abs(value))
+}
+
+/** An asset-unit quantity with up to 6 decimals, trailing zeros trimmed, e.g. "0.185336". */
+fun formatUnits(units: Double): String {
+    if (units == 0.0) return "0"
+    val s = "%.6f".format(Locale.US, units)
+    return s.trimEnd('0').trimEnd('.')
+}
+
 /** Time/date pattern appropriate for a timeframe's granularity, used for chart axis + readout. */
 private fun timePattern(timeframe: Timeframe): String = when (timeframe) {
     Timeframe.M30, Timeframe.H1, Timeframe.H4, Timeframe.D1 -> "HH:mm"
