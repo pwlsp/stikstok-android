@@ -132,6 +132,7 @@ fun TradeSheet(
                 enabled = canConfirm,
                 onConfirm = {
                     if (side == TradeSide.BUY) onBuy(clamped) else onSell(clamped)
+                    amount = 0.0
                 },
             )
             Spacer(Modifier.height(12.dp))
