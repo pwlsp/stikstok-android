@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">TikStok</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_invest">Invest</string>
+    <string name="tab_portfolio">Portfolio</string>
+    <string name="tab_account">Account</string>
+
+    <!-- Top bar -->
+    <string name="profile_chip">profile #1</string>
+    <string name="cd_profile_switcher">Switch profile</string>
+
+    <!-- Invest screen -->
+    <string name="invest_title">Invest</string>
+    <string name="invest_placeholder">Asset picker, price chart and Buy / Sell will live here.</string>
+
+    <!-- Portfolio screen -->
+    <string name="portfolio_title">Portfolio</string>
+    <string name="portfolio_placeholder">Cash balance, holdings and transaction history will live here.</string>
+
+    <!-- Account screen -->
+    <string name="account_title">Account</string>
+    <string name="account_placeholder">Profiles and account settings will live here.</string>
+
+    <!-- Language -->
+    <string name="language">Language</string>
+    <string name="language_english">English</string>
+    <string name="language_polish">Polski</string>
+</resources>

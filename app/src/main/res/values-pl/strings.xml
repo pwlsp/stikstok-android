@@ -1,0 +1,27 @@
+<resources>
+    <!-- Bottom navigation -->
+    <string name="tab_invest">Inwestuj</string>
+    <string name="tab_portfolio">Portfel</string>
+    <string name="tab_account">Konto</string>
+
+    <!-- Top bar -->
+    <string name="profile_chip">profil #1</string>
+    <string name="cd_profile_switcher">Zmień profil</string>
+
+    <!-- Invest screen -->
+    <string name="invest_title">Inwestuj</string>
+    <string name="invest_placeholder">Tu pojawi się wybór aktywa, wykres ceny i przyciski Kup / Sprzedaj.</string>
+
+    <!-- Portfolio screen -->
+    <string name="portfolio_title">Portfel</string>
+    <string name="portfolio_placeholder">Tu pojawi się saldo gotówkowe, posiadane aktywa i historia transakcji.</string>
+
+    <!-- Account screen -->
+    <string name="account_title">Konto</string>
+    <string name="account_placeholder">Tu pojawią się profile i ustawienia konta.</string>
+
+    <!-- Language -->
+    <string name="language">Język</string>
+    <string name="language_english">English</string>
+    <string name="language_polish">Polski</string>
+</resources>
