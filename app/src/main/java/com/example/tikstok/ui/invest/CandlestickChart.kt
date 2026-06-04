@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -64,12 +65,13 @@ fun CandlestickChart(
 
     BoxWithConstraints(modifier) {
         val viewportPx = constraints.maxWidth.toFloat()
-        // Small empty strips around the plot for the axis labels.
-        val plotLeft = with(density) { 6.dp.toPx() }
+        // Empty strips around the plot for the axis labels. The left gutter is wide enough to
+        // hold a price label, so the labels sit in free space instead of over the candles.
+        val plotLeft = with(density) { 40.dp.toPx() }
         val plotRight = with(density) { 8.dp.toPx() }
         val topPad = with(density) { 8.dp.toPx() }
         val bottomPad = with(density) { 22.dp.toPx() }
-        val labelX = with(density) { 4.dp.toPx() }
+        val labelX = with(density) { 2.dp.toPx() }
         val minSlot = with(density) { 8.dp.toPx() }
 
         val plotWidth = (viewportPx - plotLeft - plotRight).coerceAtLeast(1f)
@@ -160,49 +162,56 @@ fun CandlestickChart(
                 val leftBound = plotLeft - slot
                 val rightBound = plotLeft + plotWidth + slot
 
-                // Crosshair behind the candles so the highlighted body still reads clearly.
-                val selected = selectedIndex?.coerceIn(0, candles.size - 1)
-                if (selected != null) {
-                    val sx = screenXAt(selected)
-                    if (sx in leftBound..rightBound) {
-                        drawLine(crosshairColor, Offset(sx, topPad), Offset(sx, topPad + plotH), 2f)
+                // Clip the candles and crosshair to the plot square so the edge candles can't
+                // bleed into the left price-label gutter or past the right edge.
+                clipRect(left = plotLeft, top = topPad, right = plotLeft + plotWidth, bottom = topPad + plotH) {
+                    // Crosshair behind the candles so the highlighted body still reads clearly.
+                    val selected = selectedIndex?.coerceIn(0, candles.size - 1)
+                    if (selected != null) {
+                        val sx = screenXAt(selected)
+                        if (sx in leftBound..rightBound) {
+                            drawLine(crosshairColor, Offset(sx, topPad), Offset(sx, topPad + plotH), 2f)
+                        }
                     }
-                }
 
-                candles.forEachIndexed { i, candle ->
-                    val cx = screenXAt(i)
-                    if (cx < leftBound || cx > rightBound) return@forEachIndexed
-                    val color = if (candle.close >= candle.open) UpColor else DownColor
-                    drawLine(color, Offset(cx, yAt(candle.high)), Offset(cx, yAt(candle.low)), 2f)
-                    val bodyTop = yAt(maxOf(candle.open, candle.close))
-                    val bodyBot = yAt(minOf(candle.open, candle.close))
-                    drawRect(
-                        color = color,
-                        topLeft = Offset(cx - candleW / 2f, bodyTop),
-                        size = Size(candleW, (bodyBot - bodyTop).coerceAtLeast(1.5f)),
-                    )
-                }
-
-                // Outline marker on top of the selected candle.
-                if (selected != null) {
-                    val sx = screenXAt(selected)
-                    if (sx in leftBound..rightBound) {
-                        val candle = candles[selected]
+                    candles.forEachIndexed { i, candle ->
+                        val cx = screenXAt(i)
+                        if (cx < leftBound || cx > rightBound) return@forEachIndexed
                         val color = if (candle.close >= candle.open) UpColor else DownColor
+                        drawLine(color, Offset(cx, yAt(candle.high)), Offset(cx, yAt(candle.low)), 2f)
                         val bodyTop = yAt(maxOf(candle.open, candle.close))
                         val bodyBot = yAt(minOf(candle.open, candle.close))
                         drawRect(
                             color = color,
-                            topLeft = Offset(sx - candleW / 2f - 3f, bodyTop - 3f),
-                            size = Size(candleW + 6f, (bodyBot - bodyTop).coerceAtLeast(1.5f) + 6f),
-                            style = Stroke(width = 2f),
+                            topLeft = Offset(cx - candleW / 2f, bodyTop),
+                            size = Size(candleW, (bodyBot - bodyTop).coerceAtLeast(1.5f)),
                         )
+                    }
+
+                    // Outline marker on top of the selected candle.
+                    if (selected != null) {
+                        val sx = screenXAt(selected)
+                        if (sx in leftBound..rightBound) {
+                            val candle = candles[selected]
+                            val color = if (candle.close >= candle.open) UpColor else DownColor
+                            val bodyTop = yAt(maxOf(candle.open, candle.close))
+                            val bodyBot = yAt(minOf(candle.open, candle.close))
+                            drawRect(
+                                color = color,
+                                topLeft = Offset(sx - candleW / 2f - 3f, bodyTop - 3f),
+                                size = Size(candleW + 6f, (bodyBot - bodyTop).coerceAtLeast(1.5f) + 6f),
+                                style = Stroke(width = 2f),
+                            )
+                        }
                     }
                 }
             }
 
+            // Always reserve the scrollbar's vertical strip (6dp gap + 8dp bar) so the candle plot
+            // keeps the same height whether or not a frame scrolls — the bar just appears in the
+            // pre-reserved space instead of pushing the plot. dp-based, so it holds on any density.
+            Spacer(Modifier.height(6.dp))
             if (maxOffset > 0f) {
-                Spacer(Modifier.height(6.dp))
                 ChartScrollbar(
                     offset = offset,
                     maxOffset = maxOffset,
@@ -214,6 +223,8 @@ fun CandlestickChart(
                         .fillMaxWidth()
                         .padding(horizontal = 6.dp),
                 )
+            } else {
+                Spacer(Modifier.height(8.dp))
             }
         }
     }

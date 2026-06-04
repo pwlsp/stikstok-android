@@ -17,6 +17,8 @@
     <string name="invest_error">Nie udało się pobrać cen</string>
     <string name="invest_retry">Spróbuj ponownie</string>
     <string name="cd_change_asset">Zmień aktywo</string>
+    <string name="invest_show_line">Wykres liniowy</string>
+    <string name="invest_show_candles">Wykres świecowy</string>
     <!-- OHLC readout labels (single-letter, universal) -->
     <string name="ohlc_open">O</string>
     <string name="ohlc_high">H</string>

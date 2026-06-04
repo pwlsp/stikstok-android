@@ -11,15 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CandlestickChart
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,12 +60,11 @@ fun InvestScreen(
     ) {
         // The chart card sits slightly wider (8dp insets) than the rest of the content (16dp).
         val sidePadding = Modifier.padding(horizontal = 16.dp)
-        AssetHeader(state = state, onClick = { showPicker = true }, modifier = sidePadding)
-        Spacer(Modifier.height(12.dp))
         ChartCard(
             state = state,
             onSelectCandle = viewModel::selectCandle,
             onRetry = viewModel::reload,
+            onToggleMode = viewModel::toggleChartMode,
             modifier = Modifier.padding(horizontal = 8.dp),
         )
         Spacer(Modifier.height(12.dp))
@@ -70,6 +73,8 @@ fun InvestScreen(
             onSelect = viewModel::selectTimeframe,
             modifier = sidePadding,
         )
+        Spacer(Modifier.height(16.dp))
+        AssetHeader(state = state, onClick = { showPicker = true }, modifier = sidePadding)
         Spacer(Modifier.weight(1f))
         TradeButtons(modifier = sidePadding)
     }
@@ -77,10 +82,8 @@ fun InvestScreen(
     if (showPicker) {
         AssetPickerSheet(
             selected = state.asset,
-            onSelect = {
-                viewModel.selectAsset(it)
-                showPicker = false
-            },
+            // Keep the sheet open; the chart behind it updates live as assets are tapped.
+            onSelect = { viewModel.selectAsset(it) },
             onDismiss = { showPicker = false },
         )
     }
@@ -100,6 +103,21 @@ private fun AssetHeader(state: InvestUiState, onClick: () -> Unit, modifier: Mod
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Column {
+            Text(
+                text = latest?.let { "$" + formatPrice(it.close) } ?: "—",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = formatSignedPercent(changePct),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (changePct >= 0f) UpColor else DownColor,
+            )
+        }
+
+        Spacer(Modifier.weight(1f))
+
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
@@ -128,21 +146,6 @@ private fun AssetHeader(state: InvestUiState, onClick: () -> Unit, modifier: Mod
                 )
             }
         }
-
-        Spacer(Modifier.weight(1f))
-
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = latest?.let { "$" + formatPrice(it.close) } ?: "—",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = formatSignedPercent(changePct),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (changePct >= 0f) UpColor else DownColor,
-            )
-        }
     }
 }
 
@@ -151,6 +154,7 @@ private fun ChartCard(
     state: InvestUiState,
     onSelectCandle: (Int) -> Unit,
     onRetry: () -> Unit,
+    onToggleMode: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
@@ -158,7 +162,21 @@ private fun ChartCard(
             val readoutCandle = state.candles.getOrNull(
                 state.selectedIndex ?: state.candles.lastIndex,
             )
-            OhlcReadout(candle = readoutCandle, timeframe = state.timeframe)
+            Row(verticalAlignment = Alignment.Top) {
+                OhlcReadout(
+                    candle = readoutCandle,
+                    timeframe = state.timeframe,
+                    modifier = Modifier.weight(1f),
+                )
+                // Candles vs. line-overview toggle — only the scrollable (1d+) timeframes need it,
+                // but always reserve its 48dp slot so the header (and everything below the card)
+                // keeps the same height across timeframes and nothing jumps on a frame change.
+                Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                    if (state.timeframe.isScrollable) {
+                        ChartModeToggle(mode = state.chartMode, onToggle = onToggleMode)
+                    }
+                }
+            }
             Spacer(Modifier.height(8.dp))
             Box(
                 modifier = Modifier
@@ -166,8 +184,11 @@ private fun ChartCard(
                     .height(290.dp),
                 contentAlignment = Alignment.Center,
             ) {
+                val showLine = state.chartMode == ChartMode.LINE && state.timeframe.isScrollable
                 when {
-                    state.candles.isNotEmpty() -> CandlestickChart(
+                    state.candles.isEmpty() && state.isLoading -> CircularProgressIndicator()
+                    state.candles.isEmpty() && state.error != null -> ErrorState(onRetry = onRetry)
+                    showLine -> LineChart(
                         candles = state.candles,
                         selectedIndex = state.selectedIndex,
                         onSelect = onSelectCandle,
@@ -175,8 +196,13 @@ private fun ChartCard(
                         modifier = Modifier.fillMaxSize(),
                     )
 
-                    state.isLoading -> CircularProgressIndicator()
-                    state.error != null -> ErrorState(onRetry = onRetry)
+                    state.candles.isNotEmpty() -> CandlestickChart(
+                        candles = state.candles,
+                        selectedIndex = state.selectedIndex,
+                        onSelect = onSelectCandle,
+                        timeframe = state.timeframe,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
             }
         }
@@ -184,8 +210,19 @@ private fun ChartCard(
 }
 
 @Composable
-private fun OhlcReadout(candle: Candle?, timeframe: Timeframe) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+private fun ChartModeToggle(mode: ChartMode, onToggle: () -> Unit) {
+    val (icon, descRes) = when (mode) {
+        ChartMode.CANDLES -> Icons.Filled.ShowChart to R.string.invest_show_line
+        ChartMode.LINE -> Icons.Filled.CandlestickChart to R.string.invest_show_candles
+    }
+    FilledTonalIconButton(onClick = onToggle) {
+        Icon(imageVector = icon, contentDescription = stringResource(descRes))
+    }
+}
+
+@Composable
+private fun OhlcReadout(candle: Candle?, timeframe: Timeframe, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = candle?.let { formatTimestamp(it.timestamp, timeframe) } ?: "—",
             style = MaterialTheme.typography.labelLarge,

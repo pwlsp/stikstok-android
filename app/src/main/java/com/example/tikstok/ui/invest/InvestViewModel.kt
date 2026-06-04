@@ -13,6 +13,9 @@ import com.example.tikstok.model.Timeframe
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+/** How the price series is drawn: scrollable detail candles, or a whole-range line overview. */
+enum class ChartMode { CANDLES, LINE }
+
 data class InvestUiState(
     val asset: Asset = Assets.default,
     val timeframe: Timeframe = Timeframe.DEFAULT,
@@ -20,6 +23,7 @@ data class InvestUiState(
     val currency: String = "USD",
     /** Candle the user is scrubbing to with the crosshair; null means "show the latest". */
     val selectedIndex: Int? = null,
+    val chartMode: ChartMode = ChartMode.CANDLES,
     val isLoading: Boolean = false,
     val error: String? = null,
 )
@@ -53,6 +57,11 @@ class InvestViewModel : ViewModel() {
     /** Updates the crosshair selection as the user drags over the chart. */
     fun selectCandle(index: Int?) {
         uiState = uiState.copy(selectedIndex = index)
+    }
+
+    fun toggleChartMode() {
+        val next = if (uiState.chartMode == ChartMode.CANDLES) ChartMode.LINE else ChartMode.CANDLES
+        uiState = uiState.copy(chartMode = next)
     }
 
     fun reload() {

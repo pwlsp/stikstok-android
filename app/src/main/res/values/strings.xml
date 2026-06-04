@@ -19,6 +19,8 @@
     <string name="invest_error">Couldn\'t load prices</string>
     <string name="invest_retry">Retry</string>
     <string name="cd_change_asset">Change asset</string>
+    <string name="invest_show_line">Line chart</string>
+    <string name="invest_show_candles">Candlestick chart</string>
     <!-- OHLC readout labels (single-letter, universal) -->
     <string name="ohlc_open">O</string>
     <string name="ohlc_high">H</string>
