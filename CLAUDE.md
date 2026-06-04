@@ -37,11 +37,11 @@ Comparable app on Play Store: "Day Trading Simulator & Games" by Kovets.
 | Market Data | Yahoo Finance API (OHLC, min 1-minute interval) |
 | Min SDK | API 33 (Android 13) · compileSdk 37 (required by androidx.core 1.19.0) |
 
-Dependencies are managed via version catalog at `gradle/libs.versions.toml`. Navigation Compose and material-icons-extended are wired up. Firebase, Room, and Retrofit/Ktor still need to be added before feature work begins.
+Dependencies are managed via version catalog at `gradle/libs.versions.toml`. Wired up: Navigation Compose, material-icons-extended, lifecycle-viewmodel-compose. The Yahoo client uses `HttpURLConnection` + `org.json` directly (no Retrofit/Ktor yet). Firebase and Room still need to be added.
 
 ## Architecture
 
-MVVM with a repository layer, single-module for now. Implemented so far: the navigation skeleton (bottom nav + 3 placeholder screens) and the localization layer. The `data/`, `model/`, ViewModels, `auth/`, and `trade/` packages are still to be created.
+MVVM with a repository layer, single-module for now. Implemented: the navigation skeleton, the localization layer, and the **Invest** screen end-to-end (asset picker → ViewModel → repository → Yahoo client → candlestick chart). The `auth/` and `trade/` packages, Firebase, Room, and the Portfolio/Account features are still to be built.
 
 ```
 app/src/main/java/com/example/tikstok/
@@ -49,7 +49,8 @@ app/src/main/java/com/example/tikstok/
 ├── ui/
 │   ├── TikStokApp.kt  # Root Scaffold: shared top bar + NavigationBar + NavHost
 │   ├── components/    # Shared composables (PlaceholderContent, ...)
-│   ├── invest/        # Asset chart screen (+ ViewModel — TODO)
+│   ├── invest/        # InvestScreen + InvestViewModel, CandlestickChart (Canvas),
+│   │                  #   AssetPickerSheet, PriceFormat helpers
 │   ├── trade/         # Buy/sell screen (+ ViewModel — TODO)
 │   ├── portfolio/     # Portfolio & holdings screen (+ ViewModel — TODO)
 │   ├── account/       # Profile list, settings + language switcher
@@ -57,9 +58,13 @@ app/src/main/java/com/example/tikstok/
 ├── navigation/
 │   └── TikStokDestination.kt  # enum of bottom-nav tabs (route, label, icon)
 ├── locale/            # AppLanguage enum + LocaleHelper (per-app locale)
-├── data/              # TODO: local (Room), remote (firebase, yahoo), repository
-└── model/             # TODO: Asset, Profile, Transaction
+├── data/
+│   ├── remote/yahoo/  # YahooFinanceService (HttpURLConnection + org.json), PriceSeries
+│   └── repository/    # MarketRepository (suspend, Dispatchers.IO)
+└── model/             # Asset/AssetType/Assets catalog, Candle, Timeframe
 ```
+
+The candlestick chart is custom `Canvas`, not Vico (the drag-to-preview-OHLC crosshair is awkward on Vico's tooltip markers). Press-and-drag scrubs a crosshair and reports the candle index, so the OHLC readout shows that point's exact values. Each candle has a minimum width, so dense ranges (e.g. 5y) overflow the viewport and scroll horizontally via a draggable scrollbar under the chart — panning lives on the scrollbar, scrubbing on the chart, and the visible window sets the price scale. `Timeframe` maps each selector chip to a Yahoo `range`/`interval` (+ optional trim). Adding an asset = a line in `model/Asset.kt`'s `Assets` catalog.
 
 Tabs are switched via `NavHostController.navigateToTab` in `TikStokApp.kt` (single back-stack entry per tab with `saveState`/`restoreState`). Add new top-level tabs by extending the `TikStokDestination` enum; add detail screens (trade, transaction history) as extra `composable` routes in the same `NavHost`.
 

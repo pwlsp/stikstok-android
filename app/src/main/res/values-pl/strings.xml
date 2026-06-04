@@ -9,8 +9,19 @@
     <string name="cd_profile_switcher">Zmień profil</string>
 
     <!-- Invest screen -->
-    <string name="invest_title">Inwestuj</string>
-    <string name="invest_placeholder">Tu pojawi się wybór aktywa, wykres ceny i przyciski Kup / Sprzedaj.</string>
+    <string name="invest_select_asset">Wybierz aktywo</string>
+    <string name="invest_section_stocks">Akcje</string>
+    <string name="invest_section_crypto">Kryptowaluty</string>
+    <string name="invest_buy">Kup</string>
+    <string name="invest_sell">Sprzedaj</string>
+    <string name="invest_error">Nie udało się pobrać cen</string>
+    <string name="invest_retry">Spróbuj ponownie</string>
+    <string name="cd_change_asset">Zmień aktywo</string>
+    <!-- OHLC readout labels (single-letter, universal) -->
+    <string name="ohlc_open">O</string>
+    <string name="ohlc_high">H</string>
+    <string name="ohlc_low">L</string>
+    <string name="ohlc_close">C</string>
 
     <!-- Portfolio screen -->
     <string name="portfolio_title">Portfel</string>

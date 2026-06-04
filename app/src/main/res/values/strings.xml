@@ -11,8 +11,19 @@
     <string name="cd_profile_switcher">Switch profile</string>
 
     <!-- Invest screen -->
-    <string name="invest_title">Invest</string>
-    <string name="invest_placeholder">Asset picker, price chart and Buy / Sell will live here.</string>
+    <string name="invest_select_asset">Select asset</string>
+    <string name="invest_section_stocks">Stocks</string>
+    <string name="invest_section_crypto">Crypto</string>
+    <string name="invest_buy">Buy</string>
+    <string name="invest_sell">Sell</string>
+    <string name="invest_error">Couldn\'t load prices</string>
+    <string name="invest_retry">Retry</string>
+    <string name="cd_change_asset">Change asset</string>
+    <!-- OHLC readout labels (single-letter, universal) -->
+    <string name="ohlc_open">O</string>
+    <string name="ohlc_high">H</string>
+    <string name="ohlc_low">L</string>
+    <string name="ohlc_close">C</string>
 
     <!-- Portfolio screen -->
     <string name="portfolio_title">Portfolio</string>
