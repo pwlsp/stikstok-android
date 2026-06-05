@@ -55,8 +55,9 @@ fun CandlestickChart(
     timeframe: Timeframe,
     modifier: Modifier = Modifier,
 ) {
-    val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val gridColor = MaterialTheme.colorScheme.outline
+    val labelColor = MaterialTheme.colorScheme.onSurface
+    val labelBgColor = MaterialTheme.colorScheme.surfaceVariant
     val crosshairColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
     val thumbColor = MaterialTheme.colorScheme.outline
@@ -70,7 +71,8 @@ fun CandlestickChart(
         val plotLeft = with(density) { 40.dp.toPx() }
         val plotRight = with(density) { 8.dp.toPx() }
         val topPad = with(density) { 8.dp.toPx() }
-        val bottomPad = with(density) { 22.dp.toPx() }
+        // Extra bottom room so the lowest price label clears the x-axis time labels underneath it.
+        val bottomPad = with(density) { 30.dp.toPx() }
         val labelX = with(density) { 2.dp.toPx() }
         // The minimum slot only applies to the scrollable frames — it's what makes a dense series
         // overflow and scroll. Non-scrollable frames have no minimum, so their candles always size
@@ -202,16 +204,23 @@ fun CandlestickChart(
                     }
                 }
 
-                // Price labels drawn after the plot so they appear above the graph, ensuring they are
-                // not obscured if they overlap the left edge of the chart.
+                // Price labels drawn after the plot so they sit above the graph, each on a small
+                // rounded chip so it stays legible over the candles and grid.
                 listOf(max, (max + min) / 2f, min).forEach { price ->
-                    val y = yAt(price)
-                    drawContext.canvas.nativeCanvas.drawText(
-                        formatPrice(price),
-                        labelX,
-                        y + labelPaint.textSize / 3f,
-                        leftPaint,
+                    val text = formatPrice(price)
+                    val baselineY = yAt(price) + labelPaint.textSize / 3f
+                    val padX = 4.dp.toPx()
+                    val padY = 2.dp.toPx()
+                    val fm = leftPaint.fontMetrics
+                    val textW = leftPaint.measureText(text)
+                    val left = (labelX - padX).coerceAtLeast(0f)
+                    drawRoundRect(
+                        color = labelBgColor,
+                        topLeft = Offset(left, baselineY + fm.ascent - padY),
+                        size = Size(textW + (labelX - left) + padX, (fm.descent - fm.ascent) + padY * 2),
+                        cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx()),
                     )
+                    drawContext.canvas.nativeCanvas.drawText(text, labelX, baselineY, leftPaint)
                 }
             }
 

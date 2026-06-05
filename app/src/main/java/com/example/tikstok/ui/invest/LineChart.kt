@@ -8,7 +8,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -37,9 +40,10 @@ fun LineChart(
     timeframe: Timeframe,
     modifier: Modifier = Modifier,
 ) {
-    val lineColor = MaterialTheme.colorScheme.primary
-    val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val lineColor = Color.White
+    val gridColor = MaterialTheme.colorScheme.outline
+    val labelColor = MaterialTheme.colorScheme.onSurface
+    val labelBgColor = MaterialTheme.colorScheme.surfaceVariant
     val crosshairColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     val timeFmt = remember(timeframe) { timeFormatter(timeframe) }
     val density = LocalDensity.current
@@ -47,7 +51,7 @@ fun LineChart(
     val plotLeft = with(density) { 40.dp.toPx() }
     val plotRight = with(density) { 8.dp.toPx() }
     val topPad = with(density) { 8.dp.toPx() }
-    val bottomPad = with(density) { 22.dp.toPx() }
+    val bottomPad = with(density) { 30.dp.toPx() }
     val labelX = with(density) { 2.dp.toPx() }
     val strokePx = with(density) { 2.dp.toPx() }
 
@@ -131,12 +135,22 @@ fun LineChart(
             drawCircle(lineColor, radius = strokePx * 1.6f, center = Offset(sx, yAt(candles[selected].close)))
         }
 
-        // Draw price labels last so they are above the graph
+        // Draw price labels last so they are above the graph, each on a small rounded chip.
         listOf(hi, (hi + lo) / 2f, lo).forEach { price ->
-            val y = yAt(price)
-            drawContext.canvas.nativeCanvas.drawText(
-                formatPrice(price), labelX, y + labelPaint.textSize / 3f, leftPaint,
+            val text = formatPrice(price)
+            val baselineY = yAt(price) + labelPaint.textSize / 3f
+            val padX = 4.dp.toPx()
+            val padY = 2.dp.toPx()
+            val fm = leftPaint.fontMetrics
+            val textW = leftPaint.measureText(text)
+            val left = (labelX - padX).coerceAtLeast(0f)
+            drawRoundRect(
+                color = labelBgColor,
+                topLeft = Offset(left, baselineY + fm.ascent - padY),
+                size = Size(textW + (labelX - left) + padX, (fm.descent - fm.ascent) + padY * 2),
+                cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx()),
             )
+            drawContext.canvas.nativeCanvas.drawText(text, labelX, baselineY, leftPaint)
         }
     }
 }

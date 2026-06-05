@@ -57,7 +57,7 @@ fun InvestScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(vertical = 16.dp),
+            .padding(top = 4.dp, bottom = 16.dp),
     ) {
         // The chart card sits slightly wider (8dp insets) than the rest of the content (16dp).
         val sidePadding = Modifier.padding(horizontal = 16.dp)
@@ -77,6 +77,7 @@ fun InvestScreen(
         Spacer(Modifier.height(16.dp))
         AssetHeader(state = state, onClick = { showPicker = true }, modifier = sidePadding)
         Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(24.dp))
         TradeButtons(
             enabled = state.candles.isNotEmpty(),
             onBuy = { tradeSide = TradeSide.BUY },
@@ -260,6 +261,7 @@ private fun OhlcReadout(candle: Candle?, timeframe: Timeframe, modifier: Modifie
             text = candle?.let { formatTimestamp(it.timestamp, timeframe) } ?: "—",
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Medium,
+            color = Color.White,
         )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             OhlcItem(stringResource(R.string.ohlc_open), candle?.open)

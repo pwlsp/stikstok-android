@@ -106,7 +106,12 @@ fun TradeSheet(
                 onValueChange = { amount = it.toDouble() },
                 valueRange = 0f..maxAmount.coerceAtLeast(0.01).toFloat(),
                 enabled = maxAmount > 0.0,
-                colors = SliderDefaults.colors(thumbColor = sideColor, activeTrackColor = sideColor),
+                // Only the filled (chosen) part takes the side color; the rest stays neutral grey.
+                colors = SliderDefaults.colors(
+                    thumbColor = sideColor,
+                    activeTrackColor = sideColor,
+                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
             )
             Spacer(Modifier.height(12.dp))
             QuickAmounts(selected = clamped, maxAmount = maxAmount, onPick = { amount = it })
@@ -439,10 +444,25 @@ private fun SwipeToConfirm(label: String, color: Color, enabled: Boolean, onConf
     ) {
         val maxOffsetPx = with(density) { (maxWidth - knob - pad * 2).toPx() }.coerceAtLeast(0f)
 
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(label, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+        // When the knob is visible, offset the text to the right so it never sits under it at rest.
+        // When disabled (hint text, no knob), center the text freely across the full width.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (enabled) Modifier.padding(start = knob + pad * 3, end = pad * 2) else Modifier),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        ) {
+            Text(
+                label,
+                color = Color.White,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                softWrap = false,
+            )
             if (enabled) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
             }
         }
 

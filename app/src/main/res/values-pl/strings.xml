@@ -28,8 +28,8 @@
     <string name="trade_total_cost">Koszt</string>
     <string name="trade_potential_profit">Potencjalny zysk</string>
     <string name="trade_you_receive">Otrzymasz</string>
-    <string name="trade_swipe_buy">Przesuń, aby kupić %1$s</string>
-    <string name="trade_swipe_sell">Przesuń, aby sprzedać %1$s</string>
+    <string name="trade_swipe_buy">Przesuń: kup %1$s</string>
+    <string name="trade_swipe_sell">Przesuń: sprzedaj %1$s</string>
     <string name="trade_hint_select_amount">Wybierz kwotę</string>
     <string name="trade_hint_no_cash">Brak gotówki</string>
     <string name="trade_hint_nothing_to_sell">Nic do sprzedania</string>
