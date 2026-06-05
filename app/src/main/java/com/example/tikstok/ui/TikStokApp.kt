@@ -46,6 +46,7 @@ import com.example.tikstok.R
 import com.example.tikstok.data.portfolio.PortfolioStore
 import com.example.tikstok.navigation.TikStokDestination
 import com.example.tikstok.ui.account.AccountScreen
+import com.example.tikstok.ui.account.SettingsScreen
 import com.example.tikstok.ui.invest.DownColor
 import com.example.tikstok.ui.invest.InvestScreen
 import com.example.tikstok.ui.invest.UpColor
@@ -115,10 +116,11 @@ fun TikStokApp() {
                             contentDescription = stringResource(R.string.cd_refresh),
                         )
                     }
-                    // TODO: open the profile switcher; placeholder until profiles exist.
+                    // The chip shows the active profile and jumps to Account, where profiles are
+                    // switched and created.
                     AssistChip(
-                        onClick = { },
-                        label = { Text(stringResource(R.string.profile_chip)) },
+                        onClick = { navController.navigateToTab(TikStokDestination.ACCOUNT) },
+                        label = { Text(PortfolioStore.active.name, maxLines = 1) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Filled.SwapVert,
@@ -197,7 +199,12 @@ fun TikStokApp() {
                     onBack = { navController.popBackStack() },
                 )
             }
-            composable(TikStokDestination.ACCOUNT.route) { AccountScreen() }
+            composable(TikStokDestination.ACCOUNT.route) {
+                AccountScreen(onOpenSettings = { navController.navigate("settings") })
+            }
+            composable("settings") {
+                SettingsScreen(onBack = { navController.popBackStack() })
+            }
         }
     }
 }

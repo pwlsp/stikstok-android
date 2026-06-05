@@ -5,7 +5,6 @@
     <string name="tab_account">Konto</string>
 
     <!-- Top bar -->
-    <string name="profile_chip">profil #1</string>
     <string name="cd_profile_switcher">Zmień profil</string>
 
     <!-- Invest screen -->
@@ -75,12 +74,45 @@
 
     <!-- Common -->
     <string name="action_cancel">Anuluj</string>
+    <string name="action_delete">Usuń</string>
     <string name="cd_back">Wstecz</string>
     <string name="cd_refresh">Odśwież ceny</string>
 
     <!-- Account screen -->
-    <string name="account_title">Konto</string>
-    <string name="account_placeholder">Tu pojawią się profile i ustawienia konta.</string>
+    <string name="account_your_profiles">Twoje profile</string>
+    <string name="account_profiles_meta">Profile: %1$d · od %2$s</string>
+    <string name="account_active">Aktywny</string>
+    <string name="account_all_time">łącznie</string>
+    <string name="account_stat_cash">Gotówka</string>
+    <string name="account_stat_portfolio">Portfel</string>
+    <string name="account_stat_pl">Wynik</string>
+    <string name="account_create_profile">Utwórz nowy profil</string>
+    <string name="account_create_profile_sub">Wypróbuj inną strategię osobno</string>
+    <string name="account_create_title">Nowy profil</string>
+    <string name="account_profile_name">Nazwa profilu</string>
+    <string name="account_starting_balance">Saldo początkowe</string>
+    <string name="account_create">Utwórz</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Ustawienia</string>
+    <string name="settings_account">Konto</string>
+    <string name="settings_nickname">Pseudonim</string>
+    <string name="settings_email">E-mail</string>
+    <string name="settings_password">Hasło</string>
+    <string name="settings_edit">Edytuj</string>
+    <string name="settings_change">Zmień</string>
+    <string name="settings_danger_zone">Strefa zagrożenia</string>
+    <string name="settings_sign_out">Wyloguj się</string>
+    <string name="settings_sign_out_message">Wrócisz do ekranu logowania. Twoje profile pozostaną zapisane.</string>
+    <string name="settings_delete_account">Usuń konto</string>
+    <string name="settings_delete_permanent">Nieodwracalne</string>
+    <string name="settings_delete_title">Usunąć konto?</string>
+    <string name="settings_delete_message">To trwale usunie Twoje konto i wszystkie profile. Nie można tego cofnąć.</string>
+    <string name="settings_edit_nickname">Zmień pseudonim</string>
+    <string name="settings_edit_email">Zmień e-mail</string>
+    <string name="settings_change_password">Zmień hasło</string>
+    <string name="settings_new_password">Nowe hasło</string>
+    <string name="settings_save">Zapisz</string>
 
     <!-- Language -->
     <string name="language">Język</string>

@@ -31,6 +31,10 @@ fun formatSignedUsd(value: Double): String {
 fun formatDateTime(timestampMillis: Long): String =
     SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault()).format(Date(timestampMillis))
 
+/** A month + year for the account "joined" line, e.g. "Jun 2026". */
+fun formatMonthYear(timestampMillis: Long): String =
+    SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(Date(timestampMillis))
+
 /** An asset-unit quantity with up to 6 decimals, trailing zeros trimmed, e.g. "0.185336". */
 fun formatUnits(units: Double): String {
     if (units == 0.0) return "0"

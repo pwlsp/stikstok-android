@@ -7,7 +7,6 @@
     <string name="tab_account">Account</string>
 
     <!-- Top bar -->
-    <string name="profile_chip">profile #1</string>
     <string name="cd_profile_switcher">Switch profile</string>
 
     <!-- Invest screen -->
@@ -77,12 +76,45 @@
 
     <!-- Common -->
     <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
     <string name="cd_back">Back</string>
     <string name="cd_refresh">Refresh prices</string>
 
     <!-- Account screen -->
-    <string name="account_title">Account</string>
-    <string name="account_placeholder">Profiles and account settings will live here.</string>
+    <string name="account_your_profiles">Your profiles</string>
+    <string name="account_profiles_meta">%1$d profiles · joined %2$s</string>
+    <string name="account_active">Active</string>
+    <string name="account_all_time">all-time</string>
+    <string name="account_stat_cash">Cash</string>
+    <string name="account_stat_portfolio">Portfolio</string>
+    <string name="account_stat_pl">P/L</string>
+    <string name="account_create_profile">Create new profile</string>
+    <string name="account_create_profile_sub">Try a different strategy in isolation</string>
+    <string name="account_create_title">New profile</string>
+    <string name="account_profile_name">Profile name</string>
+    <string name="account_starting_balance">Starting balance</string>
+    <string name="account_create">Create</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_nickname">Nickname</string>
+    <string name="settings_email">Email</string>
+    <string name="settings_password">Password</string>
+    <string name="settings_edit">Edit</string>
+    <string name="settings_change">Change</string>
+    <string name="settings_danger_zone">Danger zone</string>
+    <string name="settings_sign_out">Sign out</string>
+    <string name="settings_sign_out_message">You\'ll be returned to the login screen. Your profiles stay saved.</string>
+    <string name="settings_delete_account">Delete account</string>
+    <string name="settings_delete_permanent">Permanent</string>
+    <string name="settings_delete_title">Delete account?</string>
+    <string name="settings_delete_message">This permanently removes your account and all profiles. This can\'t be undone.</string>
+    <string name="settings_edit_nickname">Edit nickname</string>
+    <string name="settings_edit_email">Edit email</string>
+    <string name="settings_change_password">Change password</string>
+    <string name="settings_new_password">New password</string>
+    <string name="settings_save">Save</string>
 
     <!-- Language -->
     <string name="language">Language</string>
