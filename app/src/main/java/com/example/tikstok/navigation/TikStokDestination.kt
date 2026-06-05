@@ -21,7 +21,8 @@ enum class TikStokDestination(
     companion object {
         val START = INVEST
 
-        fun fromRoute(route: String?): TikStokDestination =
-            entries.firstOrNull { it.route == route } ?: START
+        /** The tab owning [route], or null for detail screens (e.g. history) that aren't tabs. */
+        fun fromRoute(route: String?): TikStokDestination? =
+            entries.firstOrNull { it.route == route }
     }
 }

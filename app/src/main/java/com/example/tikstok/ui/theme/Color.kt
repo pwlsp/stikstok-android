@@ -16,7 +16,7 @@ val AppSurfaceHighest = Color(0xFF232A33)
 val AppSurfaceVariant = Color(0xFF232A33)
 
 val AppOnSurface = Color(0xFFF1F3F5)
-val AppOnSurfaceVariant = Color(0xFFB0B8C4)
+val AppOnSurfaceVariant = Color(0xFFC8D0D8)
 
 val AppOutline = Color(0xFF3A424D)
 val AppOutlineVariant = Color(0xFF252C35)

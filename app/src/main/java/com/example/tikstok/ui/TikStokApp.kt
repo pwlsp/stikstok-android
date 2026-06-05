@@ -34,10 +34,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.tikstok.R
 import com.example.tikstok.data.portfolio.PortfolioStore
 import com.example.tikstok.navigation.TikStokDestination
@@ -46,7 +48,9 @@ import com.example.tikstok.ui.invest.DownColor
 import com.example.tikstok.ui.invest.InvestScreen
 import com.example.tikstok.ui.invest.UpColor
 import com.example.tikstok.ui.invest.formatUsd
+import com.example.tikstok.ui.portfolio.CashHistoryScreen
 import com.example.tikstok.ui.portfolio.PortfolioScreen
+import com.example.tikstok.ui.portfolio.TransactionHistoryScreen
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -151,7 +155,32 @@ fun TikStokApp() {
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(TikStokDestination.INVEST.route) { InvestScreen() }
-            composable(TikStokDestination.PORTFOLIO.route) { PortfolioScreen() }
+            composable(TikStokDestination.PORTFOLIO.route) {
+                PortfolioScreen(
+                    onOpenHistory = { symbol ->
+                        navController.navigate("history" + if (symbol != null) "?symbol=$symbol" else "")
+                    },
+                    onOpenCashHistory = { navController.navigate("cash_history") },
+                )
+            }
+            composable("cash_history") {
+                CashHistoryScreen(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = "history?symbol={symbol}",
+                arguments = listOf(
+                    navArgument("symbol") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) { entry ->
+                TransactionHistoryScreen(
+                    initialSymbol = entry.arguments?.getString("symbol"),
+                    onBack = { navController.popBackStack() },
+                )
+            }
             composable(TikStokDestination.ACCOUNT.route) { AccountScreen() }
         }
     }

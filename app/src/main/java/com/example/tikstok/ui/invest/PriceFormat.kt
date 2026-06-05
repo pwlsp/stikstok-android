@@ -27,6 +27,10 @@ fun formatSignedUsd(value: Double): String {
     return "$sign$%,.2f".format(Locale.US, kotlin.math.abs(value))
 }
 
+/** A full date + time for the transaction history, e.g. "5 Jun 2026, 14:03". */
+fun formatDateTime(timestampMillis: Long): String =
+    SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault()).format(Date(timestampMillis))
+
 /** An asset-unit quantity with up to 6 decimals, trailing zeros trimmed, e.g. "0.185336". */
 fun formatUnits(units: Double): String {
     if (units == 0.0) return "0"

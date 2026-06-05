@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -21,13 +22,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.SouthEast
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +43,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -91,8 +100,10 @@ fun TradeSheet(
         Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
             TradeHeader(asset, price, side, onSideChange = { side = it })
 
+            var showInput by remember { mutableStateOf(false) }
+
             Spacer(Modifier.height(20.dp))
-            AmountDisplay(clamped)
+            AmountDisplay(clamped, onClick = { showInput = true })
             Spacer(Modifier.height(10.dp))
             UnitEquivalent(units, asset.ticker)
 
@@ -114,6 +125,15 @@ fun TradeSheet(
             )
             Spacer(Modifier.height(12.dp))
             QuickAmounts(selected = clamped, maxAmount = maxAmount, onPick = { amount = it })
+
+            if (showInput) {
+                AmountInputDialog(
+                    initial = clamped,
+                    max = maxAmount,
+                    onConfirm = { amount = it; showInput = false },
+                    onDismiss = { showInput = false },
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
             TradeSummary(side = side, price = price, amount = clamped, units = units, holding = holding)
@@ -217,10 +237,13 @@ private fun SideSegment(text: String, selected: Boolean, color: Color, onClick: 
 }
 
 @Composable
-private fun AmountDisplay(amount: Double) {
+private fun AmountDisplay(amount: Double, onClick: () -> Unit = {}) {
     val parts = formatUsd(amount).split(".")
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.Bottom,
     ) {
@@ -488,4 +511,49 @@ private fun SwipeToConfirm(label: String, color: Color, enabled: Boolean, onConf
         }
     }
     }
+}
+
+@Composable
+private fun AmountInputDialog(initial: Double, max: Double, onConfirm: (Double) -> Unit, onDismiss: () -> Unit) {
+    val initialText = if (initial > 0.0) formatUsd(initial) else ""
+    var field by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = initialText,
+                selection = TextRange(0, initialText.length),
+            )
+        )
+    }
+    val parsed = field.text.replace(',', '.').toDoubleOrNull()
+    val valid = parsed != null && parsed > 0.0 && parsed <= max
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.trade_enter_amount)) },
+        text = {
+            val focusRequester = remember { FocusRequester() }
+            LaunchedEffect(Unit) { focusRequester.requestFocus() }
+            OutlinedTextField(
+                value = field,
+                onValueChange = { new ->
+                    field = new.copy(text = new.text.filter { it.isDigit() || it == '.' || it == ',' })
+                },
+                singleLine = true,
+                leadingIcon = { Text("$", style = MaterialTheme.typography.titleMedium) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                isError = field.text.isNotEmpty() && !valid,
+                supportingText = { Text(stringResource(R.string.trade_max_amount, "$" + formatUsd(max))) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { if (valid) parsed?.let(onConfirm) }, enabled = valid) {
+                Text(stringResource(R.string.trade_confirm_amount))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
 }

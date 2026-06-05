@@ -36,6 +36,9 @@
     <string name="trade_hint_no_cash">Not enough cash</string>
     <string name="trade_hint_nothing_to_sell">Nothing to sell</string>
     <string name="trade_practice_mode">Practice mode — no real money at risk</string>
+    <string name="trade_enter_amount">Enter amount</string>
+    <string name="trade_max_amount">Max: %1$s</string>
+    <string name="trade_confirm_amount">Set</string>
     <!-- OHLC readout labels (single-letter, universal) -->
     <string name="ohlc_open">O</string>
     <string name="ohlc_high">H</string>
@@ -44,7 +47,37 @@
 
     <!-- Portfolio screen -->
     <string name="portfolio_title">Portfolio</string>
-    <string name="portfolio_placeholder">Cash balance, holdings and transaction history will live here.</string>
+    <string name="portfolio_cash_balance">Cash balance</string>
+    <string name="portfolio_add">Add</string>
+    <string name="portfolio_total_value">Total Portfolio Value</string>
+    <string name="portfolio_holdings">Holdings</string>
+    <string name="portfolio_sort_value">Sort: Value</string>
+    <string name="portfolio_empty">No holdings yet — buy something on Invest.</string>
+    <string name="portfolio_add_cash">Add cash</string>
+
+    <!-- Transaction history -->
+    <string name="history_title">Transaction history</string>
+    <string name="history_filter_all">All</string>
+    <string name="history_empty">No transactions yet.</string>
+
+    <!-- Cash history -->
+    <string name="cash_history_title">Cash history</string>
+    <string name="cash_current_balance">Current balance</string>
+    <string name="cash_available">Available: %1$s</string>
+    <string name="cash_max">Max: %1$s</string>
+    <string name="cash_deposited">Deposited</string>
+    <string name="cash_withdrawn">Withdrawn</string>
+    <string name="cash_deposit">Deposit</string>
+    <string name="cash_withdraw">Withdraw</string>
+    <string name="cash_deposit_title">Deposit cash</string>
+    <string name="cash_withdraw_title">Withdraw cash</string>
+    <string name="cash_entry_deposit">Deposit</string>
+    <string name="cash_entry_withdrawal">Withdrawal</string>
+    <string name="cash_empty">No cash movements yet.</string>
+
+    <!-- Common -->
+    <string name="action_cancel">Cancel</string>
+    <string name="cd_back">Back</string>
 
     <!-- Account screen -->
     <string name="account_title">Account</string>

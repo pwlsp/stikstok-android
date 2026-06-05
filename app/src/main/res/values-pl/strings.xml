@@ -34,6 +34,9 @@
     <string name="trade_hint_no_cash">Brak gotówki</string>
     <string name="trade_hint_nothing_to_sell">Nic do sprzedania</string>
     <string name="trade_practice_mode">Tryb ćwiczeniowy — bez prawdziwych pieniędzy</string>
+    <string name="trade_enter_amount">Wpisz kwotę</string>
+    <string name="trade_max_amount">Maks.: %1$s</string>
+    <string name="trade_confirm_amount">Ustaw</string>
     <!-- OHLC readout labels (single-letter, universal) -->
     <string name="ohlc_open">O</string>
     <string name="ohlc_high">H</string>
@@ -42,7 +45,37 @@
 
     <!-- Portfolio screen -->
     <string name="portfolio_title">Portfel</string>
-    <string name="portfolio_placeholder">Tu pojawi się saldo gotówkowe, posiadane aktywa i historia transakcji.</string>
+    <string name="portfolio_cash_balance">Saldo gotówki</string>
+    <string name="portfolio_add">Dodaj</string>
+    <string name="portfolio_total_value">Łączna wartość portfela</string>
+    <string name="portfolio_holdings">Aktywa</string>
+    <string name="portfolio_sort_value">Sortuj: Wartość</string>
+    <string name="portfolio_empty">Brak aktywów — kup coś w zakładce Inwestuj.</string>
+    <string name="portfolio_add_cash">Dodaj gotówkę</string>
+
+    <!-- Transaction history -->
+    <string name="history_title">Historia transakcji</string>
+    <string name="history_filter_all">Wszystkie</string>
+    <string name="history_empty">Brak transakcji.</string>
+
+    <!-- Cash history -->
+    <string name="cash_history_title">Historia gotówki</string>
+    <string name="cash_current_balance">Aktualne saldo</string>
+    <string name="cash_available">Dostępne: %1$s</string>
+    <string name="cash_max">Maks.: %1$s</string>
+    <string name="cash_deposited">Wpłacono</string>
+    <string name="cash_withdrawn">Wypłacono</string>
+    <string name="cash_deposit">Wpłać</string>
+    <string name="cash_withdraw">Wypłać</string>
+    <string name="cash_deposit_title">Wpłać gotówkę</string>
+    <string name="cash_withdraw_title">Wypłać gotówkę</string>
+    <string name="cash_entry_deposit">Wpłata</string>
+    <string name="cash_entry_withdrawal">Wypłata</string>
+    <string name="cash_empty">Brak operacji gotówkowych.</string>
+
+    <!-- Common -->
+    <string name="action_cancel">Anuluj</string>
+    <string name="cd_back">Wstecz</string>
 
     <!-- Account screen -->
     <string name="account_title">Konto</string>

@@ -45,4 +45,6 @@ object Assets {
 
     val all = stocks + crypto
     val default = stocks.first()
+
+    fun bySymbol(symbol: String): Asset? = all.firstOrNull { it.symbol == symbol }
 }

@@ -59,8 +59,8 @@ fun CandlestickChart(
     val labelColor = MaterialTheme.colorScheme.onSurface
     val labelBgColor = MaterialTheme.colorScheme.surfaceVariant
     val crosshairColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-    val trackColor = MaterialTheme.colorScheme.surfaceVariant
-    val thumbColor = MaterialTheme.colorScheme.outline
+    val trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+    val thumbColor = Color(0xFF5A6470)
     val timeFmt = remember(timeframe) { timeFormatter(timeframe) }
     val density = LocalDensity.current
 
