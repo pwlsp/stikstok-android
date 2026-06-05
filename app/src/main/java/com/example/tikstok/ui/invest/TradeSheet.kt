@@ -66,7 +66,6 @@ enum class TradeSide { BUY, SELL }
 fun TradeSheet(
     asset: Asset,
     price: Double,
-    changePct: Float,
     initialSide: TradeSide,
     cash: Double,
     holding: Holding?,
@@ -90,7 +89,7 @@ fun TradeSheet(
         val units = if (price > 0.0) clamped / price else 0.0
 
         Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp)) {
-            TradeHeader(asset, price, changePct, side, onSideChange = { side = it })
+            TradeHeader(asset, price, side, onSideChange = { side = it })
 
             Spacer(Modifier.height(20.dp))
             AmountDisplay(clamped)
@@ -156,7 +155,6 @@ fun TradeSheet(
 private fun TradeHeader(
     asset: Asset,
     price: Double,
-    changePct: Float,
     side: TradeSide,
     onSideChange: (TradeSide) -> Unit,
 ) {
@@ -171,23 +169,13 @@ private fun TradeHeader(
                 maxLines = 1,
                 softWrap = false,
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "$" + formatPrice(price.toFloat()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    softWrap = false,
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = formatSignedPercent(changePct),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (changePct >= 0f) UpColor else DownColor,
-                    maxLines = 1,
-                    softWrap = false,
-                )
-            }
+            Text(
+                text = "$" + formatPrice(price.toFloat()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                softWrap = false,
+            )
         }
         Spacer(Modifier.width(8.dp))
         SideToggle(side, onSideChange)

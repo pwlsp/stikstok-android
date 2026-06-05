@@ -98,17 +98,9 @@ fun InvestScreen(
     val side = tradeSide
     val price = viewModel.currentPrice
     if (side != null && price != null) {
-        val first = state.candles.firstOrNull()
-        val latest = state.candles.lastOrNull()
-        val changePct = if (latest != null && first != null && first.open != 0f) {
-            (latest.close - first.open) / first.open * 100f
-        } else {
-            0f
-        }
         TradeSheet(
             asset = state.asset,
             price = price,
-            changePct = changePct,
             initialSide = side,
             cash = viewModel.cash,
             holding = viewModel.holding(),
