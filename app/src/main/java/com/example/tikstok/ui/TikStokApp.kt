@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -60,6 +62,8 @@ fun TikStokApp() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val current = TikStokDestination.fromRoute(backStackEntry?.destination?.route)
+    // Bumped by the top-bar refresh button; InvestScreen re-fetches market data when it changes.
+    var refreshTick by remember { mutableStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -68,7 +72,13 @@ fun TikStokApp() {
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "$" + formatUsd(PortfolioStore.cash),
+                            text = "$",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = UpColor,
+                        )
+                        Text(
+                            text = formatUsd(PortfolioStore.cash),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                         )
@@ -99,6 +109,12 @@ fun TikStokApp() {
                     }
                 },
                 actions = {
+                    IconButton(onClick = { refreshTick++ }) {
+                        Icon(
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = stringResource(R.string.cd_refresh),
+                        )
+                    }
                     // TODO: open the profile switcher; placeholder until profiles exist.
                     AssistChip(
                         onClick = { },
@@ -154,7 +170,7 @@ fun TikStokApp() {
             startDestination = TikStokDestination.START.route,
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable(TikStokDestination.INVEST.route) { InvestScreen() }
+            composable(TikStokDestination.INVEST.route) { InvestScreen(refreshTick = refreshTick) }
             composable(TikStokDestination.PORTFOLIO.route) {
                 PortfolioScreen(
                     onOpenHistory = { symbol ->

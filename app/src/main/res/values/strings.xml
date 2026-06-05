@@ -78,6 +78,7 @@
     <!-- Common -->
     <string name="action_cancel">Cancel</string>
     <string name="cd_back">Back</string>
+    <string name="cd_refresh">Refresh prices</string>
 
     <!-- Account screen -->
     <string name="account_title">Account</string>

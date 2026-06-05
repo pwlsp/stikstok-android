@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,11 +49,15 @@ import com.example.tikstok.model.Timeframe
 @Composable
 fun InvestScreen(
     modifier: Modifier = Modifier,
+    refreshTick: Int = 0,
     viewModel: InvestViewModel = viewModel(),
 ) {
     val state = viewModel.uiState
     var showPicker by remember { mutableStateOf(false) }
     var tradeSide by remember { mutableStateOf<TradeSide?>(null) }
+
+    // The top-bar refresh button drives this; skip tick 0 so the initial load isn't duplicated.
+    LaunchedEffect(refreshTick) { if (refreshTick > 0) viewModel.reload() }
 
     Column(
         modifier = modifier
