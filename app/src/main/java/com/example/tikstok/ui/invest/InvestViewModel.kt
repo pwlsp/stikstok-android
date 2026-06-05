@@ -52,7 +52,9 @@ class InvestViewModel : ViewModel() {
 
     fun selectTimeframe(timeframe: Timeframe) {
         if (timeframe == uiState.timeframe) return
-        uiState = uiState.copy(timeframe = timeframe, candles = emptyList(), selectedIndex = null)
+        // Keep existing candles visible while the new period loads so the buttons stay enabled
+        // and the chart doesn't flash a spinner on every period switch.
+        uiState = uiState.copy(timeframe = timeframe, selectedIndex = null)
         reload()
     }
 

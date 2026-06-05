@@ -79,7 +79,7 @@ fun InvestScreen(
         Spacer(Modifier.weight(1f))
         Spacer(Modifier.height(24.dp))
         TradeButtons(
-            enabled = state.candles.isNotEmpty(),
+            enabled = viewModel.currentPrice != null,
             onBuy = { tradeSide = TradeSide.BUY },
             onSell = { tradeSide = TradeSide.SELL },
             modifier = sidePadding,
