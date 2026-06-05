@@ -82,7 +82,10 @@
 
     <!-- Account screen -->
     <string name="account_your_profiles">Your profiles</string>
-    <string name="account_profiles_meta">%1$d profiles · joined %2$s</string>
+    <plurals name="account_profiles_meta">
+        <item quantity="one">%1$d profile · joined %2$s</item>
+        <item quantity="other">%1$d profiles · joined %2$s</item>
+    </plurals>
     <string name="account_active">Active</string>
     <string name="account_all_time">all-time</string>
     <string name="account_stat_cash">Cash</string>
@@ -93,7 +96,12 @@
     <string name="account_create_title">New profile</string>
     <string name="account_profile_name">Profile name</string>
     <string name="account_starting_balance">Starting balance</string>
+    <string name="account_max_balance">Max account balance: %1$s</string>
     <string name="account_create">Create</string>
+    <string name="account_manage_title">Edit profile</string>
+    <string name="account_delete_profile">Delete profile</string>
+    <string name="account_delete_title">Delete profile?</string>
+    <string name="account_delete_message">This removes \"%1$s\" along with its holdings and history. This can\'t be undone.</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>

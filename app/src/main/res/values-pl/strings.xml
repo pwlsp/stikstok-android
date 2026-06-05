@@ -80,7 +80,12 @@
 
     <!-- Account screen -->
     <string name="account_your_profiles">Twoje profile</string>
-    <string name="account_profiles_meta">Profile: %1$d · od %2$s</string>
+    <plurals name="account_profiles_meta">
+        <item quantity="one">%1$d profil · od %2$s</item>
+        <item quantity="few">%1$d profile · od %2$s</item>
+        <item quantity="many">%1$d profili · od %2$s</item>
+        <item quantity="other">%1$d profilu · od %2$s</item>
+    </plurals>
     <string name="account_active">Aktywny</string>
     <string name="account_all_time">łącznie</string>
     <string name="account_stat_cash">Gotówka</string>
@@ -91,7 +96,12 @@
     <string name="account_create_title">Nowy profil</string>
     <string name="account_profile_name">Nazwa profilu</string>
     <string name="account_starting_balance">Saldo początkowe</string>
+    <string name="account_max_balance">Maks. stan konta: %1$s</string>
     <string name="account_create">Utwórz</string>
+    <string name="account_manage_title">Edytuj profil</string>
+    <string name="account_delete_profile">Usuń profil</string>
+    <string name="account_delete_title">Usunąć profil?</string>
+    <string name="account_delete_message">Spowoduje to usunięcie profilu „%1$s” wraz z jego aktywami i historią. Nie można tego cofnąć.</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Ustawienia</string>

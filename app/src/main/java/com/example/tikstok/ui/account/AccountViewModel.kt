@@ -46,11 +46,14 @@ class AccountViewModel : ViewModel() {
 
     private var loadJob: Job? = null
 
-    /** Re-prices every profile. Call when the screen appears or after a trade/profile change. */
+    /** Re-prices every profile. Call on first show, after creating a profile, or on manual refresh. */
     fun refresh(profiles: List<Profile>) {
         loadJob?.cancel()
-        // Seed with cost-basis values so the cards render instantly, then refine with live prices.
-        rows = profiles.map { ProfileRow(it, costBasisValue(it)) }
+        // Only seed cost-basis values on the very first load; afterwards keep the last priced rows
+        // visible while the refetch runs, so a refresh doesn't flash the cards back to a guess.
+        if (rows.isEmpty()) {
+            rows = profiles.map { ProfileRow(it, costBasisValue(it)) }
+        }
         isLoading = true
         loadJob = viewModelScope.launch {
             val symbols = profiles.flatMap { it.holdings.keys }.toSet()

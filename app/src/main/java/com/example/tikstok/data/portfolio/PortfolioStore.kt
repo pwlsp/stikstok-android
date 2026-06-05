@@ -110,14 +110,48 @@ object PortfolioStore {
         val profile = newProfile(trimmed, balance)
         _profiles.add(profile)
         active = profile
-        touch()
     }
 
-    /** Switches the active profile; everything else in the app follows. */
+    /**
+     * Switches the active profile; everything else in the app follows via snapshot reads of
+     * [active]. Deliberately does not touch the trade tick, so screens keyed on it (Account,
+     * Portfolio) don't re-fetch prices just because the selection changed.
+     */
     fun selectProfile(profile: Profile) {
         if (profile == active) return
         active = profile
-        touch()
+    }
+
+    /** Switches to the profile [offset] steps from the active one in list order, wrapping around. */
+    fun cycleActiveProfile(offset: Int) {
+        if (_profiles.size <= 1) return
+        val index = _profiles.indexOf(active)
+        if (index < 0) return
+        val size = _profiles.size
+        val next = ((index + offset) % size + size) % size
+        selectProfile(_profiles[next])
+    }
+
+    /** Renames a profile in place. Blank names are ignored so a profile always has a label. */
+    fun renameProfile(profile: Profile, name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        profile.name = trimmed
+    }
+
+    /**
+     * Removes a profile and all its holdings/history. No-op when it's the last one (the account
+     * always keeps at least one profile). If the deleted profile was active, the neighbour in its
+     * old slot becomes active so the app keeps following a live profile.
+     */
+    fun deleteProfile(profile: Profile) {
+        if (_profiles.size <= 1) return
+        val index = _profiles.indexOf(profile)
+        if (index < 0) return
+        _profiles.removeAt(index)
+        if (active.id == profile.id) {
+            active = _profiles[index.coerceAtMost(_profiles.lastIndex)]
+        }
     }
 
     // --- Account identity (Settings screen) -----------------------------------------------------
@@ -206,11 +240,5 @@ object PortfolioStore {
     private fun markDelta(delta: Double, now: Long) {
         lastTradeDelta = delta
         lastTradeTimestamp = now
-    }
-
-    /** Bumps the trade tick (without a cash delta) so screens keyed on it re-price. */
-    private fun touch() {
-        lastTradeDelta = null
-        lastTradeTimestamp = System.currentTimeMillis()
     }
 }

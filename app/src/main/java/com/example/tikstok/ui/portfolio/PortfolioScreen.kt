@@ -19,11 +19,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,15 +64,17 @@ fun PortfolioScreen(
     onOpenHistory: (String?) -> Unit,
     onOpenCashHistory: () -> Unit,
     modifier: Modifier = Modifier,
+    refreshTick: Int = 0,
     viewModel: PortfolioViewModel = viewModel(),
 ) {
     val state = viewModel.uiState
-    var showTopUp by remember { mutableStateOf(false) }
+    // null = closed, true = deposit, false = withdraw
+    var cashDialogDeposit by remember { mutableStateOf<Boolean?>(null) }
 
-    // Re-price whenever a trade or top-up happens (and on first show); reading these snapshot
-    // values here is what makes the effect re-run.
+    // Re-price on first show, whenever a trade or top-up happens, and when the top-bar refresh
+    // button is pressed; reading these snapshot values here is what makes the effect re-run.
     val tradeTick = PortfolioStore.lastTradeTimestamp
-    LaunchedEffect(tradeTick) { viewModel.refresh(PortfolioStore.positions) }
+    LaunchedEffect(tradeTick, refreshTick) { viewModel.refresh(PortfolioStore.positions) }
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -79,7 +84,8 @@ fun PortfolioScreen(
         item {
             CashCard(
                 cash = PortfolioStore.cash,
-                onAdd = { showTopUp = true },
+                onDeposit = { cashDialogDeposit = true },
+                onWithdraw = { cashDialogDeposit = false },
                 onClick = onOpenCashHistory,
             )
         }
@@ -102,16 +108,26 @@ fun PortfolioScreen(
         }
     }
 
-    if (showTopUp) {
-        TopUpDialog(
-            onPick = { PortfolioStore.addCash(it); showTopUp = false },
-            onDismiss = { showTopUp = false },
+    cashDialogDeposit?.let { isDeposit ->
+        CashAmountDialog(
+            isDeposit = isDeposit,
+            availableCash = PortfolioStore.cash,
+            onConfirm = { amount ->
+                if (isDeposit) PortfolioStore.addCash(amount) else PortfolioStore.withdrawCash(amount)
+                cashDialogDeposit = null
+            },
+            onDismiss = { cashDialogDeposit = null },
         )
     }
 }
 
 @Composable
-private fun CashCard(cash: Double, onAdd: () -> Unit, onClick: () -> Unit) {
+private fun CashCard(
+    cash: Double,
+    onDeposit: () -> Unit,
+    onWithdraw: () -> Unit,
+    onClick: () -> Unit,
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -120,7 +136,7 @@ private fun CashCard(cash: Double, onAdd: () -> Unit, onClick: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -145,8 +161,31 @@ private fun CashCard(cash: Double, onAdd: () -> Unit, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                 )
             }
-            TextButton(onClick = onAdd) {
-                Text("+ " + stringResource(R.string.portfolio_add))
+            // Compact +/− pair — visually one unit, not two separate buttons.
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "+",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = UpColor,
+                    modifier = Modifier
+                        .clickable(onClick = onDeposit)
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                )
+                Text(
+                    text = "−",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .clickable(onClick = onWithdraw)
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                )
             }
         }
     }
@@ -325,30 +364,45 @@ private fun EmptyHoldings() {
 }
 
 @Composable
-private fun TopUpDialog(onPick: (Double) -> Unit, onDismiss: () -> Unit) {
-    val amounts = listOf(100.0, 500.0, 1_000.0, 5_000.0)
+private fun CashAmountDialog(
+    isDeposit: Boolean,
+    availableCash: Double,
+    onConfirm: (Double) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var amount by remember { mutableStateOf("") }
+    val parsed = amount.replace(',', '.').toDoubleOrNull()
+    val max = if (isDeposit) PortfolioStore.MAX_DEPOSIT else availableCash
+    val valid = parsed != null && parsed > 0.0 && parsed <= max
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.portfolio_add_cash)) },
+        title = {
+            Text(stringResource(if (isDeposit) R.string.cash_deposit_title else R.string.cash_withdraw_title))
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                amounts.forEach { amount ->
-                    Text(
-                        text = "+ $" + formatUsd(amount),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = UpColor,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { onPick(amount) }
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { amount = it.filter { c -> c.isDigit() || c == '.' || c == ',' } },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.trade_enter_amount)) },
+                    leadingIcon = { Text("$", style = MaterialTheme.typography.titleMedium) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    isError = amount.isNotEmpty() && !valid,
+                    supportingText = { Text(stringResource(R.string.cash_max, "$" + formatUsd(max))) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         },
-        confirmButton = {},
+        confirmButton = {
+            TextButton(onClick = { onConfirm(parsed ?: 0.0) }, enabled = valid) {
+                Text(stringResource(if (isDeposit) R.string.cash_deposit else R.string.cash_withdraw))
+            }
+        },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         },
     )
 }
+

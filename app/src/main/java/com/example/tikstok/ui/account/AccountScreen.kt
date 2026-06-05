@@ -2,10 +2,14 @@ package com.example.tikstok.ui.account
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,13 +22,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -47,8 +54,10 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tikstok.R
@@ -70,14 +79,19 @@ import com.example.tikstok.ui.invest.formatUsd
 fun AccountScreen(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    refreshTick: Int = 0,
     viewModel: AccountViewModel = viewModel(),
 ) {
     var showCreate by remember { mutableStateOf(false) }
+    // The profile whose rename/delete sheet is open, and the one pending delete confirmation.
+    var managing by remember { mutableStateOf<Profile?>(null) }
+    var deleting by remember { mutableStateOf<Profile?>(null) }
 
-    // Re-price when a trade happens, a profile is added, or the active profile changes.
-    val tradeTick = PortfolioStore.lastTradeTimestamp
+    // Price every profile on first show, when a profile is added, and when the top-bar refresh
+    // button is pressed — deliberately NOT keyed on the active profile, so switching profiles
+    // doesn't re-fetch and flash the cards back to a loading/cost-basis state.
     val profileCount = PortfolioStore.profiles.size
-    LaunchedEffect(tradeTick, profileCount) { viewModel.refresh(PortfolioStore.profiles) }
+    LaunchedEffect(refreshTick, profileCount) { viewModel.refresh(PortfolioStore.profiles) }
 
     val rowsById = viewModel.rows.associateBy { it.profile.id }
 
@@ -103,6 +117,7 @@ fun AccountScreen(
                 profit = rowsById[profile.id]?.profit ?: 0.0,
                 profitPct = rowsById[profile.id]?.profitPct ?: 0.0,
                 onClick = { PortfolioStore.selectProfile(profile) },
+                onLongClick = { managing = profile },
             )
         }
         item { CreateProfileCard(onClick = { showCreate = true }) }
@@ -115,6 +130,27 @@ fun AccountScreen(
                 showCreate = false
             },
             onDismiss = { showCreate = false },
+        )
+    }
+
+    managing?.let { profile ->
+        ManageProfileDialog(
+            profile = profile,
+            canDelete = PortfolioStore.profiles.size > 1,
+            onSave = { PortfolioStore.renameProfile(profile, it) },
+            onDelete = {
+                deleting = profile
+                managing = null
+            },
+            onDismiss = { managing = null },
+        )
+    }
+
+    deleting?.let { profile ->
+        DeleteProfileDialog(
+            profile = profile,
+            onConfirm = { PortfolioStore.deleteProfile(profile) },
+            onDismiss = { deleting = null },
         )
     }
 }
@@ -141,7 +177,12 @@ private fun AccountHeader(
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = stringResource(R.string.account_profiles_meta, profileCount, joined),
+                text = pluralStringResource(
+                    R.plurals.account_profiles_meta,
+                    profileCount,
+                    profileCount,
+                    joined,
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -183,6 +224,7 @@ private fun SectionLabel(text: String) {
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ProfileCard(
     profile: Profile,
@@ -191,19 +233,18 @@ private fun ProfileCard(
     profit: Double,
     profitPct: Double,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     val up = profit >= 0.0
     val plColor = if (up) UpColor else DownColor
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         border = if (isActive) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
         Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                ProfileBadge(profile.name, isActive)
-                Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = profile.name,
@@ -236,26 +277,6 @@ private fun ProfileCard(
                 plColor = plColor,
             )
         }
-    }
-}
-
-@Composable
-private fun ProfileBadge(name: String, isActive: Boolean) {
-    val bg = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-    val fg = if (isActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(bg),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = name.trim().firstOrNull()?.uppercase() ?: "#",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = fg,
-        )
     }
 }
 
@@ -366,18 +387,23 @@ private fun CreateProfileCard(onClick: () -> Unit) {
     }
 }
 
+/** Rename a profile, or open the delete confirmation. Shown when a profile card is tapped. */
 @Composable
-private fun CreateProfileDialog(
-    onCreate: (String, Double) -> Unit,
+private fun ManageProfileDialog(
+    profile: Profile,
+    canDelete: Boolean,
+    onSave: (String) -> Unit,
+    onDelete: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var name by remember { mutableStateOf(PortfolioStore.defaultProfileName()) }
-    var balance by remember { mutableStateOf(1_000.0) }
+    var name by remember { mutableStateOf(profile.name) }
+    val valid = name.trim().isNotEmpty()
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.account_create_title)) },
+        title = { Text(stringResource(R.string.account_manage_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -385,16 +411,120 @@ private fun CreateProfileDialog(
                     label = { Text(stringResource(R.string.account_profile_name)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text(
-                    text = stringResource(R.string.account_starting_balance).uppercase(),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                if (canDelete) {
+                    TextButton(
+                        onClick = onDelete,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.account_delete_profile))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onSave(name)
+                    onDismiss()
+                },
+                enabled = valid,
+            ) {
+                Text(stringResource(R.string.settings_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+}
+
+/** Confirms permanently removing a profile and its holdings/history. */
+@Composable
+private fun DeleteProfileDialog(
+    profile: Profile,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.account_delete_title)) },
+        text = { Text(stringResource(R.string.account_delete_message, profile.name)) },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirm()
+                    onDismiss()
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text(stringResource(R.string.action_delete))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CreateProfileDialog(
+    onCreate: (String, Double) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(PortfolioStore.defaultProfileName()) }
+    // Plain numeric string (no thousands separators) so it always parses cleanly.
+    var amount by remember { mutableStateOf("1000") }
+    val parsed = amount.replace(',', '.').toDoubleOrNull()
+    val valid = parsed != null && parsed > 0.0 && parsed <= PortfolioStore.MAX_CASH
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.account_create_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.account_profile_name)) },
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { new ->
+                        amount = new.filter { it.isDigit() || it == '.' || it == ',' }
+                    },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.account_starting_balance)) },
+                    leadingIcon = { Text("$", style = MaterialTheme.typography.titleMedium) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    isError = amount.isNotEmpty() && !valid,
+                    supportingText = {
+                        Text(
+                            stringResource(
+                                R.string.account_max_balance,
+                                "$" + formatUsd(PortfolioStore.MAX_CASH),
+                            ),
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PortfolioStore.STARTING_BALANCES.forEach { option ->
                         FilterChip(
-                            selected = balance == option,
-                            onClick = { balance = option },
+                            selected = parsed == option,
+                            onClick = { amount = option.toLong().toString() },
                             label = { Text("$" + formatUsd(option).removeSuffix(".00")) },
                         )
                     }
@@ -402,7 +532,7 @@ private fun CreateProfileDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onCreate(name, balance) }) {
+            TextButton(onClick = { onCreate(name, parsed ?: 0.0) }, enabled = valid) {
                 Text(stringResource(R.string.account_create))
             }
         },
