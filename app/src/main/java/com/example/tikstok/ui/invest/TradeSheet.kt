@@ -422,12 +422,18 @@ private fun SwipeToConfirm(label: String, color: Color, enabled: Boolean, onConf
     val knob = 48.dp
     val pad = 4.dp
     val offsetX = remember { Animatable(0f) }
+    val shape = RoundedCornerShape(50)
 
+    Glowing(
+        color = if (enabled) color else Color.Transparent,
+        shape = shape,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .height(trackHeight)
-            .clip(RoundedCornerShape(50))
+            .clip(shape)
             .background(if (enabled) color else color.copy(alpha = 0.4f)),
         contentAlignment = Alignment.Center,
     ) {
@@ -472,5 +478,6 @@ private fun SwipeToConfirm(label: String, color: Color, enabled: Boolean, onConf
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
             }
         }
+    }
     }
 }

@@ -35,7 +35,7 @@ import com.example.tikstok.model.Timeframe
 import java.util.Date
 
 internal val UpColor = Color(0xFF22C55E)
-internal val DownColor = Color(0xFFEF4444)
+internal val DownColor = Color(0xFFE76B4E)
 
 /**
  * Candlestick chart drawn on a [Canvas].
@@ -72,7 +72,10 @@ fun CandlestickChart(
         val topPad = with(density) { 8.dp.toPx() }
         val bottomPad = with(density) { 22.dp.toPx() }
         val labelX = with(density) { 2.dp.toPx() }
-        val minSlot = with(density) { 8.dp.toPx() }
+        // The minimum slot only applies to the scrollable frames — it's what makes a dense series
+        // overflow and scroll. Non-scrollable frames have no minimum, so their candles always size
+        // to fill the width exactly and can never spill into a scrollbar on a narrow screen.
+        val minSlot = if (timeframe.isScrollable) with(density) { 8.dp.toPx() } else 0f
 
         val plotWidth = (viewportPx - plotLeft - plotRight).coerceAtLeast(1f)
         val count = candles.size.coerceAtLeast(1)

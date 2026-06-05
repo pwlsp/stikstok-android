@@ -251,28 +251,27 @@ private fun ChartModeToggle(mode: ChartMode, onToggle: () -> Unit) {
 
 @Composable
 private fun OhlcReadout(candle: Candle?, timeframe: Timeframe, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             text = candle?.let { formatTimestamp(it.timestamp, timeframe) } ?: "—",
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Medium,
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                OhlcItem(stringResource(R.string.ohlc_open), candle?.open)
-                OhlcItem(stringResource(R.string.ohlc_low), candle?.low)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                OhlcItem(
-                    label = stringResource(R.string.ohlc_close),
-                    value = candle?.close,
-                    valueColor = candle?.let { if (it.close >= it.open) UpColor else DownColor },
-                )
-                OhlcItem(stringResource(R.string.ohlc_high), candle?.high)
-            }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            OhlcItem(stringResource(R.string.ohlc_open), candle?.open)
+            OhlcItem(stringResource(R.string.ohlc_low), candle?.low)
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            OhlcItem(
+                label = stringResource(R.string.ohlc_close),
+                value = candle?.close,
+                valueColor = candle?.let { if (it.close >= it.open) UpColor else DownColor },
+            )
+            OhlcItem(stringResource(R.string.ohlc_high), candle?.high)
         }
     }
 }
@@ -329,21 +328,33 @@ private fun TradeButtons(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Button(
-            onClick = onBuy,
-            enabled = enabled,
+        Glowing(
+            color = if (enabled) UpColor else Color.Transparent,
+            shape = ButtonDefaults.shape,
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = UpColor),
         ) {
-            Text(stringResource(R.string.invest_buy))
+            Button(
+                onClick = onBuy,
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = UpColor),
+            ) {
+                Text(stringResource(R.string.invest_buy))
+            }
         }
-        Button(
-            onClick = onSell,
-            enabled = enabled,
+        Glowing(
+            color = if (enabled) DownColor else Color.Transparent,
+            shape = ButtonDefaults.shape,
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = DownColor),
         ) {
-            Text(stringResource(R.string.invest_sell))
+            Button(
+                onClick = onSell,
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = DownColor),
+            ) {
+                Text(stringResource(R.string.invest_sell))
+            }
         }
     }
 }

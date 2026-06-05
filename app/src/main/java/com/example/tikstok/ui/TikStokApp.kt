@@ -27,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,7 +39,9 @@ import com.example.tikstok.R
 import com.example.tikstok.data.portfolio.PortfolioStore
 import com.example.tikstok.navigation.TikStokDestination
 import com.example.tikstok.ui.account.AccountScreen
+import com.example.tikstok.ui.invest.DownColor
 import com.example.tikstok.ui.invest.InvestScreen
+import com.example.tikstok.ui.invest.UpColor
 import com.example.tikstok.ui.invest.formatUsd
 import com.example.tikstok.ui.portfolio.PortfolioScreen
 import kotlinx.coroutines.delay
@@ -77,7 +78,7 @@ fun TikStokApp() {
                                 enter = fadeIn() + slideInVertically(initialOffsetY = { -it / 2 }),
                                 exit = fadeOut()
                             ) {
-                                val color = if (delta >= 0) Color(0xFF22C55E) else Color(0xFFEF4444)
+                                val color = if (delta >= 0) UpColor else DownColor
                                 val sign = if (delta >= 0) "+" else "-"
                                 Text(
                                     text = " ($sign$" + formatUsd(abs(delta)) + ")",
@@ -108,7 +109,9 @@ fun TikStokApp() {
             )
         },
         bottomBar = {
-            NavigationBar {
+            // Match the page background so the nav bar blends with the content instead of sitting
+            // on the default tinted surface container.
+            NavigationBar(containerColor = MaterialTheme.colorScheme.background) {
                 TikStokDestination.entries.forEach { destination ->
                     NavigationBarItem(
                         selected = current == destination,

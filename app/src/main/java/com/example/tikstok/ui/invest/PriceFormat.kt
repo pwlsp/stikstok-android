@@ -36,7 +36,7 @@ fun formatUnits(units: Double): String {
 
 /** Time/date pattern appropriate for a timeframe's granularity, used for chart axis + readout. */
 private fun timePattern(timeframe: Timeframe): String = when (timeframe) {
-    Timeframe.M30, Timeframe.H1, Timeframe.H4, Timeframe.D1 -> "HH:mm"
+    Timeframe.M30, Timeframe.H1, Timeframe.H3, Timeframe.D1 -> "HH:mm"
     Timeframe.W1 -> "EEE HH:mm"
     Timeframe.MO1, Timeframe.Y1 -> "dd MMM"
     Timeframe.Y5 -> "MMM yyyy"
