@@ -15,6 +15,7 @@
     <string name="invest_section_crypto">Crypto</string>
     <string name="invest_buy">Buy</string>
     <string name="invest_sell">Sell</string>
+    <string name="invest_current_price">Current price</string>
     <string name="invest_error">Couldn\'t load prices</string>
     <string name="invest_retry">Retry</string>
     <string name="cd_change_asset">Change asset</string>

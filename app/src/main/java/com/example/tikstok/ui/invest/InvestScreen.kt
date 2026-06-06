@@ -145,6 +145,11 @@ private fun AssetHeader(state: InvestUiState, onClick: () -> Unit, modifier: Mod
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.invest_current_price).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             MoneyText(
                 text = latest?.let { "$" + formatPrice(it.close) } ?: "—",
                 style = MaterialTheme.typography.titleLarge,

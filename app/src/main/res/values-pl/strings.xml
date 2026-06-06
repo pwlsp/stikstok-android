@@ -13,6 +13,7 @@
     <string name="invest_section_crypto">Kryptowaluty</string>
     <string name="invest_buy">Kup</string>
     <string name="invest_sell">Sprzedaj</string>
+    <string name="invest_current_price">Aktualna cena</string>
     <string name="invest_error">Nie udało się pobrać cen</string>
     <string name="invest_retry">Spróbuj ponownie</string>
     <string name="cd_change_asset">Zmień aktywo</string>
