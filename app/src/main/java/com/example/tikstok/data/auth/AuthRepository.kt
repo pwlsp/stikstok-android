@@ -1,5 +1,6 @@
 package com.example.tikstok.data.auth
 
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -29,11 +30,35 @@ object AuthRepository {
         auth.createUserWithEmailAndPassword(email.trim(), password).await().user
             ?: error("Sign-up returned no user")
 
-    /** Exchanges a Google ID token (from Credential Manager) for a Firebase session. */
-    suspend fun signInWithGoogle(idToken: String): FirebaseUser {
+    /**
+     * Exchanges a Google ID token (from Credential Manager) for a Firebase session. Returns true
+     * when this is the account's first sign-in, so the caller can route a new user into onboarding.
+     */
+    suspend fun signInWithGoogle(idToken: String): Boolean {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        return auth.signInWithCredential(credential).await().user
-            ?: error("Google sign-in returned no user")
+        val result = auth.signInWithCredential(credential).await()
+        result.user ?: error("Google sign-in returned no user")
+        return result.additionalUserInfo?.isNewUser == true
+    }
+
+    /**
+     * Whether the account signs in with an email/password — the only case where changing the
+     * password here makes sense. Google-only accounts manage their password with Google instead.
+     */
+    fun isEmailPasswordUser(): Boolean =
+        auth.currentUser?.providerData?.any { it.providerId == EmailAuthProvider.PROVIDER_ID } == true
+
+    /**
+     * Re-authenticates with [currentPassword] (Firebase requires a fresh login before sensitive
+     * changes) and sets [newPassword]. Throws `FirebaseAuthInvalidCredentialsException` when the
+     * current password is wrong, so the caller can flag exactly that.
+     */
+    suspend fun changePassword(currentPassword: String, newPassword: String) {
+        val user = auth.currentUser ?: error("Not signed in")
+        val email = user.email ?: error("Account has no email")
+        val credential = EmailAuthProvider.getCredential(email, currentPassword)
+        user.reauthenticate(credential).await()
+        user.updatePassword(newPassword).await()
     }
 
     fun signOut() = auth.signOut()

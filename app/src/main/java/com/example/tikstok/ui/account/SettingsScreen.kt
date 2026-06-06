@@ -53,6 +53,8 @@ import com.example.tikstok.data.auth.AuthRepository
 import com.example.tikstok.data.portfolio.PortfolioStore
 import com.example.tikstok.locale.AppLanguage
 import com.example.tikstok.locale.LocaleHelper
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import kotlinx.coroutines.launch
 
 /**
@@ -70,10 +72,13 @@ fun SettingsScreen(
     var language by remember { mutableStateOf(LocaleHelper.current(context)) }
 
     var editNickname by remember { mutableStateOf(false) }
-    var editEmail by remember { mutableStateOf(false) }
     var changePassword by remember { mutableStateOf(false) }
     var confirmSignOut by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+
+    // Changing the password only applies to email/password accounts — Google accounts have no
+    // password here, so the row is hidden for them entirely.
+    val canChangePassword = remember { AuthRepository.isEmailPasswordUser() }
 
     Column(modifier = modifier.fillMaxSize()) {
         Header(onBack = onBack)
@@ -96,18 +101,19 @@ fun SettingsScreen(
                 SettingRow(
                     label = stringResource(R.string.settings_email),
                     value = PortfolioStore.email,
-                    action = stringResource(R.string.settings_edit),
-                    onClick = { editEmail = true },
+                    action = null,
                 )
             }
-            item {
-                SettingRow(
-                    label = stringResource(R.string.settings_password),
-                    value = "•••••••••••",
-                    action = stringResource(R.string.settings_change),
-                    actionColor = MaterialTheme.colorScheme.primary,
-                    onClick = { changePassword = true },
-                )
+            if (canChangePassword) {
+                item {
+                    SettingRow(
+                        label = stringResource(R.string.settings_password),
+                        value = "•••••••••••",
+                        action = stringResource(R.string.settings_change),
+                        actionColor = MaterialTheme.colorScheme.primary,
+                        onClick = { changePassword = true },
+                    )
+                }
             }
 
             item { SectionLabel(stringResource(R.string.language)) }
@@ -146,16 +152,6 @@ fun SettingsScreen(
             initial = PortfolioStore.nickname,
             onSave = { PortfolioStore.updateNickname(it); editNickname = false },
             onDismiss = { editNickname = false },
-        )
-    }
-    if (editEmail) {
-        EditFieldDialog(
-            title = stringResource(R.string.settings_edit_email),
-            label = stringResource(R.string.settings_email),
-            initial = PortfolioStore.email,
-            keyboardType = KeyboardType.Email,
-            onSave = { PortfolioStore.updateEmail(it); editEmail = false },
-            onDismiss = { editEmail = false },
         )
     }
     if (changePassword) {
@@ -277,13 +273,13 @@ private fun SettingRow(
     label: String?,
     value: String,
     action: String?,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)? = null,
     actionColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
     ) {
         Row(
             modifier = Modifier
@@ -315,11 +311,14 @@ private fun SettingRow(
                 )
                 Spacer(Modifier.width(4.dp))
             }
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            // Only interactive rows get the chevron; a read-only row (e.g. email) shows none.
+            if (onClick != null) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -396,31 +395,113 @@ private fun EditFieldDialog(
     )
 }
 
+/**
+ * Changes the Firebase password: confirm the current one, type the new one twice. The current
+ * password is needed because Firebase requires a fresh re-authentication before it'll update the
+ * credential. Only reachable for email/password accounts.
+ */
 @Composable
 private fun PasswordDialog(onDismiss: () -> Unit) {
-    var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    var current by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    val changedMsg = stringResource(R.string.settings_password_changed)
+    val wrongMsg = stringResource(R.string.settings_password_wrong)
+    val weakMsg = stringResource(R.string.auth_error_weak_password)
+    val unknownMsg = stringResource(R.string.auth_error_unknown)
+
+    val mismatch = confirm.isNotEmpty() && confirm != newPassword
+    // Firebase's minimum is 6 chars; mirror it so the button enables only on a valid new password.
+    val valid = !loading && current.isNotBlank() && newPassword.length >= 6 && newPassword == confirm
+
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!loading) onDismiss() },
         title = { Text(stringResource(R.string.settings_change_password)) },
         text = {
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                singleLine = true,
-                label = { Text(stringResource(R.string.settings_new_password)) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss, enabled = password.isNotBlank()) {
-                Text(stringResource(R.string.settings_save))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                PasswordField(
+                    value = current,
+                    onValueChange = { current = it; error = null },
+                    label = stringResource(R.string.settings_current_password),
+                    isError = error == wrongMsg,
+                )
+                PasswordField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it; error = null },
+                    label = stringResource(R.string.settings_new_password),
+                )
+                PasswordField(
+                    value = confirm,
+                    onValueChange = { confirm = it; error = null },
+                    label = stringResource(R.string.settings_confirm_new_password),
+                    isError = mismatch,
+                    supportingText = if (mismatch) stringResource(R.string.auth_password_mismatch) else null,
+                )
+                error?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    loading = true
+                    error = null
+                    scope.launch {
+                        try {
+                            AuthRepository.changePassword(current, newPassword)
+                            Toast.makeText(context, changedMsg, Toast.LENGTH_SHORT).show()
+                            onDismiss()
+                        } catch (e: FirebaseAuthInvalidCredentialsException) {
+                            error = wrongMsg
+                        } catch (e: FirebaseAuthWeakPasswordException) {
+                            error = weakMsg
+                        } catch (e: Exception) {
+                            error = unknownMsg
+                        } finally {
+                            loading = false
+                        }
+                    }
+                },
+                enabled = valid,
+            ) { Text(stringResource(R.string.settings_save)) }
         },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !loading) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun PasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    isError: Boolean = false,
+    supportingText: String? = null,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        singleLine = true,
+        label = { Text(label) },
+        visualTransformation = PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        isError = isError,
+        supportingText = supportingText?.let { { Text(it) } },
+        modifier = Modifier.fillMaxWidth(),
     )
 }
 

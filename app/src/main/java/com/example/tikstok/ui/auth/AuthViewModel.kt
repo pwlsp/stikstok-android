@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tikstok.data.auth.AuthRepository
+import com.example.tikstok.data.auth.OnboardingState
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -55,10 +56,17 @@ class AuthViewModel : ViewModel() {
         error = null
         viewModelScope.launch {
             try {
-                if (isSignUp) AuthRepository.signUp(email, password)
-                else AuthRepository.signIn(email, password)
+                if (isSignUp) {
+                    // Flag onboarding before the call returns: the gate's auth-state listener flips
+                    // to "signed in" during sign-up, and we want it to land on the intro, not the app.
+                    OnboardingState.begin()
+                    AuthRepository.signUp(email, password)
+                } else {
+                    AuthRepository.signIn(email, password)
+                }
                 clearForm()
             } catch (e: Exception) {
+                OnboardingState.clear()
                 error = e.toAuthError()
             } finally {
                 loading = false
@@ -72,7 +80,8 @@ class AuthViewModel : ViewModel() {
         error = null
         viewModelScope.launch {
             try {
-                AuthRepository.signInWithGoogle(idToken)
+                val isNewUser = AuthRepository.signInWithGoogle(idToken)
+                if (isNewUser) OnboardingState.begin()
                 clearForm()
             } catch (e: Exception) {
                 error = AuthError.GOOGLE_FAILED

@@ -122,7 +122,11 @@
     <string name="settings_edit_nickname">Edit nickname</string>
     <string name="settings_edit_email">Edit email</string>
     <string name="settings_change_password">Change password</string>
+    <string name="settings_current_password">Current password</string>
     <string name="settings_new_password">New password</string>
+    <string name="settings_confirm_new_password">Confirm new password</string>
+    <string name="settings_password_changed">Password changed</string>
+    <string name="settings_password_wrong">Current password is incorrect</string>
     <string name="settings_save">Save</string>
 
     <!-- Authentication -->
@@ -146,6 +150,19 @@
     <string name="auth_error_google">Google sign-in failed. Please try again.</string>
     <string name="auth_error_unknown">Something went wrong. Please try again.</string>
     <string name="auth_reauth_required">Please sign out and sign in again, then retry deleting your account.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_step">Step %1$d of %2$d</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_finish">Get started</string>
+    <string name="onboarding_name_title">What should we call you?</string>
+    <string name="onboarding_name_subtitle">Choose a display name. You can change it any time in Settings.</string>
+    <string name="onboarding_name_label">Display name</string>
+    <string name="onboarding_profile_title">Create your first profile</string>
+    <string name="onboarding_profile_intro">A profile is its own separate portfolio — its own cash, holdings and history. Keep several to test different strategies side by side without mixing them up.</string>
+    <string name="onboarding_profile_virtual">It\'s all virtual money, just for practice — no real funds are ever involved. A profile can hold up to %1$s.</string>
+    <string name="onboarding_done_title">You\'re all set!</string>
+    <string name="onboarding_done_subtitle">Welcome aboard, %1$s. Your first profile is ready — time to start trading. Have fun!</string>
 
     <!-- Language -->
     <string name="language">Language</string>

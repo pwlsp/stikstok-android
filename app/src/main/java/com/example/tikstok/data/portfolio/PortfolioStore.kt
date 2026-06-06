@@ -4,6 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /** A position in one asset: how many units are held and the average price paid per unit. */
 data class Holding(val quantity: Double, val avgCost: Double)
@@ -62,7 +66,20 @@ object PortfolioStore {
         private set
 
     /** When the account was created — shown as the "joined" date on the Account screen. */
-    val accountCreatedAt: Long = System.currentTimeMillis()
+    var accountCreatedAt by mutableStateOf(System.currentTimeMillis())
+        private set
+
+    // --- Firestore binding ----------------------------------------------------------------------
+
+    /** Background scope for fire-and-forget write-through; Firestore queues writes while offline. */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** The signed-in user whose data this store persists, or null while signed out. */
+    private var uid: String? = null
+
+    /** True once the signed-in user's profiles have been loaded (or seeded). Gates the app UI. */
+    var loaded by mutableStateOf(false)
+        private set
 
     /** Account identity. UI-only for now; real auth lands with Firebase. */
     var nickname by mutableStateOf("Alex")
@@ -81,6 +98,86 @@ object PortfolioStore {
 
     init {
         _profiles.add(active)
+    }
+
+    // --- Sign-in / sign-out lifecycle -----------------------------------------------------------
+
+    /**
+     * Remembers which user this store now persists for. Called the moment auth reports a signed-in
+     * user, so write-through works even during onboarding (before [load] runs).
+     */
+    fun bindUser(uid: String) {
+        this.uid = uid
+    }
+
+    /**
+     * Loads the signed-in user's profiles from Firestore into the in-memory state the UI reads,
+     * then flips [loaded] so the gate shows the app. A fresh account with no data yet (e.g. one that
+     * skipped onboarding) is seeded with a starter profile. If the load fails outright (offline with
+     * an empty Firestore cache), we still seed a local starter so the app is usable; the next
+     * successful write syncs it up.
+     */
+    suspend fun load(uid: String) {
+        this.uid = uid
+        try {
+            val snapshot = PortfolioRepository.load(uid)
+            if (snapshot.profiles.isNotEmpty()) {
+                _profiles.clear()
+                _profiles.addAll(snapshot.profiles)
+                nextId = _profiles.maxOf { it.id } + 1
+                active = snapshot.profiles.firstOrNull { it.id == snapshot.activeProfileId }
+                    ?: snapshot.profiles.first()
+                snapshot.nickname?.let { nickname = it }
+                snapshot.createdAt?.let { accountCreatedAt = it }
+            } else {
+                seedDefaultProfile()
+            }
+        } catch (_: Throwable) {
+            if (_profiles.size <= 1 && _profiles.firstOrNull()?.transactions.isNullOrEmpty()) {
+                seedDefaultProfile()
+            }
+        }
+        loaded = true
+    }
+
+    /** Wipes per-user state on sign-out so the next account starts clean. */
+    fun reset() {
+        uid = null
+        loaded = false
+        nextId = 1L
+        val placeholder = newProfile("profile #1", 1_000.0)
+        _profiles.clear()
+        _profiles.add(placeholder)
+        active = placeholder
+        accountCreatedAt = System.currentTimeMillis()
+        lastTradeDelta = null
+    }
+
+    /** Creates and persists a fresh starter profile, replacing whatever placeholder was in memory. */
+    private fun seedDefaultProfile() {
+        val profile = newProfile("profile #1", 1_000.0)
+        _profiles.clear()
+        _profiles.add(profile)
+        active = profile
+        persistProfile(profile)
+        persistAccount()
+    }
+
+    private fun persistProfile(profile: Profile) {
+        val uid = uid ?: return
+        scope.launch { runCatching { PortfolioRepository.saveProfile(uid, profile) } }
+    }
+
+    private fun persistAccount() {
+        val uid = uid ?: return
+        scope.launch {
+            runCatching { PortfolioRepository.saveAccount(uid, nickname, accountCreatedAt, active.id) }
+        }
+    }
+
+    private fun deleteProfileDoc(profileId: Long) {
+        val uid = uid ?: return
+        scope.launch { runCatching { PortfolioRepository.deleteProfile(uid, profileId) } }
     }
 
     // --- Active-profile wallet views (read by Invest / Portfolio / history screens) -------------
@@ -107,6 +204,25 @@ object PortfolioStore {
     /** Suggested name for the next profile, e.g. "profile #4". */
     fun defaultProfileName(): String = "profile #${_profiles.size + 1}"
 
+    /**
+     * Finishes first-run onboarding: sets the account [nickname] and replaces the auto-created
+     * starter profile with one named [profileName] and funded with [startingBalance]. Replacing it
+     * (rather than editing in place) keeps the cash history and the P/L baseline consistent with the
+     * balance the user actually chose.
+     */
+    fun completeOnboarding(nickname: String, profileName: String, startingBalance: Double) {
+        updateNickname(nickname)
+        val trimmed = profileName.trim().ifBlank { "profile #1" }
+        val balance = startingBalance.coerceIn(0.0, MAX_CASH)
+        val profile = newProfile(trimmed, balance)
+        _profiles.clear()
+        _profiles.add(profile)
+        active = profile
+        loaded = true
+        persistProfile(profile)
+        persistAccount()
+    }
+
     /** Creates a new isolated profile with [startingBalance] cash and switches to it. */
     fun createProfile(name: String, startingBalance: Double) {
         val trimmed = name.trim().ifBlank { defaultProfileName() }
@@ -114,6 +230,8 @@ object PortfolioStore {
         val profile = newProfile(trimmed, balance)
         _profiles.add(profile)
         active = profile
+        persistProfile(profile)
+        persistAccount()
     }
 
     /**
@@ -124,6 +242,7 @@ object PortfolioStore {
     fun selectProfile(profile: Profile) {
         if (profile == active) return
         active = profile
+        persistAccount()
     }
 
     /** Switches to the profile [offset] steps from the active one in list order, wrapping around. */
@@ -141,6 +260,7 @@ object PortfolioStore {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return
         profile.name = trimmed
+        persistProfile(profile)
     }
 
     /**
@@ -156,11 +276,18 @@ object PortfolioStore {
         if (active.id == profile.id) {
             active = _profiles[index.coerceAtMost(_profiles.lastIndex)]
         }
+        deleteProfileDoc(profile.id)
+        persistAccount()
     }
 
     // --- Account identity (Settings screen) -----------------------------------------------------
 
-    fun updateNickname(value: String) { value.trim().takeIf { it.isNotEmpty() }?.let { nickname = it } }
+    fun updateNickname(value: String) {
+        value.trim().takeIf { it.isNotEmpty() }?.let {
+            nickname = it
+            persistAccount()
+        }
+    }
 
     fun updateEmail(value: String) { value.trim().takeIf { it.isNotEmpty() }?.let { email = it } }
 
@@ -175,6 +302,7 @@ object PortfolioStore {
         active.cashEntries.add(CashEntry(CashFlowType.DEPOSIT, deposit, now))
         markDelta(deposit, now)
         enforceCashCap()
+        persistProfile(active)
     }
 
     /** Auto-withdraws anything above [MAX_CASH] so the wallet never holds more than the ceiling. */
@@ -197,6 +325,7 @@ object PortfolioStore {
         val now = System.currentTimeMillis()
         active.cashEntries.add(CashEntry(CashFlowType.WITHDRAWAL, take, now))
         markDelta(-take, now)
+        persistProfile(active)
     }
 
     /** Spend up to [amount] USD buying [symbol] at [price] per unit. */
@@ -212,6 +341,7 @@ object PortfolioStore {
         active.holdings[symbol] = Holding(newQty, newAvg)
         active.cash -= spend
         recordTrade(symbol, TransactionType.BUY, units, price, spend, -spend)
+        persistProfile(active)
     }
 
     /** Sell up to [amount] USD worth of [symbol] at [price] per unit. */
@@ -227,6 +357,7 @@ object PortfolioStore {
         active.cash += sellValue
         recordTrade(symbol, TransactionType.SELL, units, price, sellValue, sellValue)
         enforceCashCap()
+        persistProfile(active)
     }
 
     private fun recordTrade(

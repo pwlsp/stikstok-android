@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// TikStok portfolio data: every document under users/{uid} is private to that signed-in user.
+// Replace the open "test mode" rules with these in the Firebase console
+// (Firestore Database → Rules → paste → Publish).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Each profile (and anything nested under it) inherits the same owner-only access.
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}

@@ -122,7 +122,11 @@
     <string name="settings_edit_nickname">Zmień pseudonim</string>
     <string name="settings_edit_email">Zmień e-mail</string>
     <string name="settings_change_password">Zmień hasło</string>
+    <string name="settings_current_password">Obecne hasło</string>
     <string name="settings_new_password">Nowe hasło</string>
+    <string name="settings_confirm_new_password">Powtórz nowe hasło</string>
+    <string name="settings_password_changed">Hasło zostało zmienione</string>
+    <string name="settings_password_wrong">Obecne hasło jest nieprawidłowe</string>
     <string name="settings_save">Zapisz</string>
 
     <!-- Authentication -->
@@ -146,6 +150,19 @@
     <string name="auth_error_google">Logowanie Google nie powiodło się. Spróbuj ponownie.</string>
     <string name="auth_error_unknown">Coś poszło nie tak. Spróbuj ponownie.</string>
     <string name="auth_reauth_required">Wyloguj się i zaloguj ponownie, następnie spróbuj usunąć konto.</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_step">Krok %1$d z %2$d</string>
+    <string name="onboarding_next">Dalej</string>
+    <string name="onboarding_finish">Zaczynamy</string>
+    <string name="onboarding_name_title">Jak mamy się do Ciebie zwracać?</string>
+    <string name="onboarding_name_subtitle">Wybierz wyświetlaną nazwę. Możesz ją zmienić w każdej chwili w Ustawieniach.</string>
+    <string name="onboarding_name_label">Wyświetlana nazwa</string>
+    <string name="onboarding_profile_title">Utwórz swój pierwszy profil</string>
+    <string name="onboarding_profile_intro">Profil to osobny portfel — własna gotówka, aktywa i historia. Możesz mieć ich kilka, aby testować różne strategie obok siebie, nie mieszając ich ze sobą.</string>
+    <string name="onboarding_profile_virtual">To wirtualne pieniądze, wyłącznie do ćwiczeń — nie używasz prawdziwych środków. Profil może mieć maksymalnie %1$s.</string>
+    <string name="onboarding_done_title">Wszystko gotowe!</string>
+    <string name="onboarding_done_subtitle">Witaj na pokładzie, %1$s. Twój pierwszy profil jest gotowy — czas zacząć handlować. Baw się dobrze!</string>
 
     <!-- Language -->
     <string name="language">Język</string>

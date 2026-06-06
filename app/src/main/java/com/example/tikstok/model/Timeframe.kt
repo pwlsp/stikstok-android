@@ -30,6 +30,18 @@ enum class Timeframe(
     /** Frames from 1d up pack enough candles to scroll, and offer the line-chart overview. */
     val isScrollable: Boolean get() = ordinal >= D1.ordinal
 
+    /**
+     * How long a cached series for this frame stays fresh before the repository refetches. Short,
+     * fast-moving intraday frames expire in a minute; the wider, coarser frames barely change within
+     * an hour (or a day), so they're cached far longer to spare the network.
+     */
+    val cacheTtlMillis: Long
+        get() = when (this) {
+            M30, H1, H3, D1 -> 60_000L            // 1 minute
+            W1, MO1 -> 15 * 60_000L               // 15 minutes
+            Y1, Y5 -> 6 * 60 * 60_000L            // 6 hours
+        }
+
     companion object {
         val DEFAULT = D1
     }
