@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -73,8 +74,14 @@ fun LoginScreen(
     // option instead of failing to build — email/password still works.
     val googleConfigured = remember { webClientResId(context) != 0 }
 
+    // Rendered outside the app's Scaffold, so it needs to paint the themed background itself —
+    // otherwise it falls back to the white window background and the controls blend in.
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+    ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             // Edge-to-edge is on, so keep content clear of the status/nav bars and, crucially, let
             // the keyboard shrink the scroll area instead of covering the sign-in button.
@@ -227,6 +234,7 @@ fun LoginScreen(
                 ),
             )
         }
+    }
     }
 }
 
