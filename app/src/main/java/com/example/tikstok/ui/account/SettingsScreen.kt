@@ -31,10 +31,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,9 +49,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.tikstok.R
+import com.example.tikstok.data.auth.AuthRepository
 import com.example.tikstok.data.portfolio.PortfolioStore
 import com.example.tikstok.locale.AppLanguage
 import com.example.tikstok.locale.LocaleHelper
+import kotlinx.coroutines.launch
 
 /**
  * Account settings (deck slide 8, right phone): editable account identity, language, and a danger
@@ -62,6 +66,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var language by remember { mutableStateOf(LocaleHelper.current(context)) }
 
     var editNickname by remember { mutableStateOf(false) }
@@ -161,17 +166,33 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_sign_out),
             message = stringResource(R.string.settings_sign_out_message),
             confirmLabel = stringResource(R.string.settings_sign_out),
-            onConfirm = { confirmSignOut = false },
+            // The auth-state listener in the gate swaps back to the login screen.
+            onConfirm = {
+                confirmSignOut = false
+                AuthRepository.signOut()
+            },
             onDismiss = { confirmSignOut = false },
         )
     }
     if (confirmDelete) {
+        val reauthMessage = stringResource(R.string.auth_reauth_required)
         ConfirmDialog(
             title = stringResource(R.string.settings_delete_title),
             message = stringResource(R.string.settings_delete_message),
             confirmLabel = stringResource(R.string.action_delete),
             destructive = true,
-            onConfirm = { confirmDelete = false },
+            onConfirm = {
+                confirmDelete = false
+                scope.launch {
+                    try {
+                        AuthRepository.deleteAccount()
+                        // Success: account gone, listener returns us to login.
+                    } catch (e: Exception) {
+                        // Firebase rejects deletion of a stale session — ask for a fresh sign-in.
+                        Toast.makeText(context, reauthMessage, Toast.LENGTH_LONG).show()
+                    }
+                }
+            },
             onDismiss = { confirmDelete = false },
         )
     }

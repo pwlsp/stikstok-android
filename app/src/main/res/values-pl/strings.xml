@@ -125,6 +125,24 @@
     <string name="settings_new_password">Nowe hasło</string>
     <string name="settings_save">Zapisz</string>
 
+    <!-- Authentication -->
+    <string name="auth_tagline">Ćwicz handel akcjami i kryptowalutami z USA na wirtualnych pieniądzach.</string>
+    <string name="auth_sign_in">Zaloguj się</string>
+    <string name="auth_sign_up">Załóż konto</string>
+    <string name="auth_or">lub</string>
+    <string name="auth_continue_google">Kontynuuj z Google</string>
+    <string name="auth_have_account">Masz już konto? Zaloguj się</string>
+    <string name="auth_no_account">Nie masz konta? Załóż je</string>
+    <string name="auth_show_password">Pokaż hasło</string>
+    <string name="auth_hide_password">Ukryj hasło</string>
+    <string name="auth_error_invalid_credentials">Błędny e-mail lub hasło.</string>
+    <string name="auth_error_email_in_use">Ten e-mail jest już zarejestrowany.</string>
+    <string name="auth_error_weak_password">Hasło musi mieć co najmniej 6 znaków.</string>
+    <string name="auth_error_network">Brak połączenia. Sprawdź internet i spróbuj ponownie.</string>
+    <string name="auth_error_google">Logowanie Google nie powiodło się. Spróbuj ponownie.</string>
+    <string name="auth_error_unknown">Coś poszło nie tak. Spróbuj ponownie.</string>
+    <string name="auth_reauth_required">Wyloguj się i zaloguj ponownie, następnie spróbuj usunąć konto.</string>
+
     <!-- Language -->
     <string name="language">Język</string>
     <string name="language_english">English</string>

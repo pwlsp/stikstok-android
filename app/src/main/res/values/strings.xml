@@ -125,6 +125,24 @@
     <string name="settings_new_password">New password</string>
     <string name="settings_save">Save</string>
 
+    <!-- Authentication -->
+    <string name="auth_tagline">Practice trading US stocks and crypto with virtual money.</string>
+    <string name="auth_sign_in">Sign in</string>
+    <string name="auth_sign_up">Create account</string>
+    <string name="auth_or">or</string>
+    <string name="auth_continue_google">Continue with Google</string>
+    <string name="auth_have_account">Already have an account? Sign in</string>
+    <string name="auth_no_account">No account yet? Create one</string>
+    <string name="auth_show_password">Show password</string>
+    <string name="auth_hide_password">Hide password</string>
+    <string name="auth_error_invalid_credentials">Wrong email or password.</string>
+    <string name="auth_error_email_in_use">That email is already registered.</string>
+    <string name="auth_error_weak_password">Password must be at least 6 characters.</string>
+    <string name="auth_error_network">No connection. Check your internet and try again.</string>
+    <string name="auth_error_google">Google sign-in failed. Please try again.</string>
+    <string name="auth_error_unknown">Something went wrong. Please try again.</string>
+    <string name="auth_reauth_required">Please sign out and sign in again, then retry deleting your account.</string>
+
     <!-- Language -->
     <string name="language">Language</string>
     <string name="language_english">English</string>
