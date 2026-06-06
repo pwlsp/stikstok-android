@@ -2,6 +2,7 @@ package com.example.tikstok.ui.auth
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,6 +54,7 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tikstok.R
+import com.example.tikstok.ui.invest.Glowing
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
@@ -92,12 +94,18 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Bold,
+        // Same soft halo the Buy/Sell buttons use, in the copper accent, so the title glows.
+        Glowing(
             color = MaterialTheme.colorScheme.primary,
-        )
+            shape = RoundedCornerShape(24.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         Spacer(Modifier.height(6.dp))
         // Switches with the mode so it's obvious whether you're signing in or creating an account.
         Text(
