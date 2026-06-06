@@ -52,12 +52,9 @@ fun AssetPickerSheet(
     onSelect: (Asset) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    // Skip the half-expanded state so a tap opens the sheet straight to its full content height
-    // (the content is shorter than the screen, so it only takes the space it needs).
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        // Two columns side by side: stocks on the left, crypto on the right.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -168,7 +165,6 @@ private fun AssetRow(asset: Asset, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** Small rounded tile showing an asset's brand logo — shared with the Invest header. */
 @Composable
 fun AssetAvatar(asset: Asset, size: Dp = 36.dp) {
     Box(
@@ -178,8 +174,6 @@ fun AssetAvatar(asset: Asset, size: Dp = 36.dp) {
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center,
     ) {
-        // Monochrome vector logo, tinted so it adapts to the theme. Swap the tint here (or per
-        // asset) to recolor any of these icons — they're single-path, so a tint just works.
         Icon(
             painter = painterResource(asset.iconRes),
             contentDescription = null,

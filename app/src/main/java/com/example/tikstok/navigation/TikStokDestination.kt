@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.tikstok.R
 
-/** Top-level destinations shown in the bottom navigation bar. */
 enum class TikStokDestination(
     val route: String,
     @param:StringRes val labelRes: Int,
@@ -21,7 +20,6 @@ enum class TikStokDestination(
     companion object {
         val START = INVEST
 
-        /** The tab owning [route], or null for detail screens (e.g. history) that aren't tabs. */
         fun fromRoute(route: String?): TikStokDestination? =
             entries.firstOrNull { it.route == route }
     }

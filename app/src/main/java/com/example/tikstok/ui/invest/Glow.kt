@@ -12,13 +12,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Wraps [content] with a soft colored halo behind it, matching the glowing buttons in the deck.
- *
- * A copy of the button shape is drawn just inside the content bounds and blurred with an unbounded
- * edge treatment, so the blur blooms outward past the edges into a glow. The solid core stays under
- * the (opaque) content, leaving only the colored bloom visible around it.
- */
 @Composable
 fun Glowing(
     color: Color,

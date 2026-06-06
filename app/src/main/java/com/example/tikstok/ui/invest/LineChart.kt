@@ -27,11 +27,6 @@ import com.example.tikstok.model.Timeframe
 import java.util.Date
 import kotlin.math.roundToInt
 
-/**
- * A simple close-price line covering the whole series at once — the non-scrolling "overview"
- * counterpart to [CandlestickChart]. Press-and-drag scrubs a crosshair and reports the nearest
- * index via [onSelect], so the same OHLC readout works in both modes.
- */
 @Composable
 fun LineChart(
     candles: List<Candle>,
@@ -135,7 +130,6 @@ fun LineChart(
             drawCircle(lineColor, radius = strokePx * 1.6f, center = Offset(sx, yAt(candles[selected].close)))
         }
 
-        // Draw price labels last so they are above the graph, each on a small rounded chip.
         listOf(hi, (hi + lo) / 2f, lo).forEach { price ->
             val text = formatPrice(price)
             val baselineY = yAt(price) + labelPaint.textSize / 3f

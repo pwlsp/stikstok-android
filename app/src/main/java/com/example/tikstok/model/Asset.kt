@@ -5,14 +5,6 @@ import com.example.tikstok.R
 
 enum class AssetType { STOCK, CRYPTO }
 
-/**
- * A tradeable asset.
- *
- * @param symbol Yahoo Finance ticker used for API calls, e.g. "AAPL" or "BTC-USD".
- * @param ticker Short ticker shown in the UI, e.g. "AAPL" or "BTC".
- * @param name Full display name, e.g. "Apple" or "Bitcoin".
- * @param iconRes Monochrome brand logo (vector drawable), tinted at render time.
- */
 data class Asset(
     val symbol: String,
     val ticker: String,
@@ -21,7 +13,6 @@ data class Asset(
     @param:DrawableRes val iconRes: Int,
 )
 
-/** Static catalog of popular US-market assets the sandbox lets you trade. */
 object Assets {
     val stocks = listOf(
         Asset("AAPL", "AAPL", "Apple", AssetType.STOCK, R.drawable.ic_apple),

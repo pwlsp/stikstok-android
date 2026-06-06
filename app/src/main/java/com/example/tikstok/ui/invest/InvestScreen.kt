@@ -62,7 +62,6 @@ fun InvestScreen(
     var showPicker by remember { mutableStateOf(false) }
     var tradeSide by remember { mutableStateOf<TradeSide?>(null) }
 
-    // The top-bar refresh button drives this; skip tick 0 so the initial load isn't duplicated.
     LaunchedEffect(refreshTick) { if (refreshTick > 0) viewModel.reload() }
 
     Column(
@@ -70,10 +69,7 @@ fun InvestScreen(
             .fillMaxSize()
             .padding(top = 4.dp, bottom = 16.dp),
     ) {
-        // The chart card sits slightly wider (8dp insets) than the rest of the content (16dp).
         val sidePadding = Modifier.padding(horizontal = 16.dp)
-        // The chart card takes whatever vertical space is left after the fixed-size controls
-        // below, so it grows on tall screens and shrinks on short ones without clipping anything.
         ChartCard(
             state = state,
             onSelectCandle = viewModel::selectCandle,
@@ -113,7 +109,6 @@ fun InvestScreen(
     if (showPicker) {
         AssetPickerSheet(
             selected = state.asset,
-            // Keep the sheet open; the chart behind it updates live as assets are tapped.
             onSelect = { viewModel.selectAsset(it) },
             onDismiss = { showPicker = false },
         )
@@ -149,7 +144,6 @@ private fun AssetHeader(state: InvestUiState, onClick: () -> Unit, modifier: Mod
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Weighted so a large price (e.g. BTC) shrinks to fit rather than shoving the asset chip.
         Column(modifier = Modifier.weight(1f)) {
             MoneyText(
                 text = latest?.let { "$" + formatPrice(it.close) } ?: "—",
@@ -196,11 +190,6 @@ private fun AssetHeader(state: InvestUiState, onClick: () -> Unit, modifier: Mod
     }
 }
 
-/**
- * One-line summary of the user's position in the selected asset: units owned and current value on
- * the left, unrealized P/L in dollars and percent on the right — the same pill/format used on the
- * Portfolio holding tiles. Always shown; with no position it just states 0 units and drops the P/L.
- */
 @Composable
 private fun HoldingLine(asset: Asset, holding: Holding?, price: Double, modifier: Modifier = Modifier) {
     val quantity = holding?.quantity ?: 0.0
@@ -280,9 +269,6 @@ private fun ChartCard(
                     timeframe = state.timeframe,
                     modifier = Modifier.weight(1f),
                 )
-                // Candles vs. line-overview toggle — only the scrollable (1d+) timeframes need it,
-                // but always reserve its 48dp slot so the header (and everything below the card)
-                // keeps the same height across timeframes and nothing jumps on a frame change.
                 Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                     if (state.timeframe.isScrollable) {
                         ChartModeToggle(mode = state.chartMode, onToggle = onToggleMode)

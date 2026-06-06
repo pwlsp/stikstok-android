@@ -5,8 +5,6 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// Fixed dark scheme matching the deck. Dynamic (Material You) color is intentionally off so the
-// copper accent is the single brand color everywhere instead of the wallpaper's tint.
 private val PresentationColorScheme = darkColorScheme(
     primary = Copper,
     onPrimary = Color.White,
@@ -14,7 +12,6 @@ private val PresentationColorScheme = darkColorScheme(
     onPrimaryContainer = Color.White,
     secondary = Copper,
     onSecondary = Color.White,
-    // Drives the "selected" look of FilterChips and the quick-amount chips.
     secondaryContainer = Copper,
     onSecondaryContainer = Color.White,
     tertiary = Copper,

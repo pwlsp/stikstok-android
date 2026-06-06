@@ -4,12 +4,6 @@ import android.app.LocaleManager
 import android.content.Context
 import android.os.LocaleList
 
-/**
- * Reads and updates the per-app language using the platform [LocaleManager] (API 33+).
- *
- * Setting the locale persists across restarts and makes Android recreate the activity so the
- * UI picks up the new resources automatically — callers don't need to reload anything.
- */
 object LocaleHelper {
 
     fun current(context: Context): AppLanguage {

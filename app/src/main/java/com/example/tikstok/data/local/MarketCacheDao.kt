@@ -6,7 +6,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 
-/** Reads and writes the cached candle series. One series == all rows sharing (symbol, timeframe). */
 @Dao
 interface MarketCacheDao {
 
@@ -25,7 +24,6 @@ interface MarketCacheDao {
     @Query("DELETE FROM candle WHERE symbol = :symbol AND timeframe = :timeframe")
     suspend fun clearCandles(symbol: String, timeframe: String)
 
-    /** Replaces a series wholesale: drop its old rows, insert the fresh ones, stamp the metadata. */
     @Transaction
     suspend fun replaceSeries(
         symbol: String,

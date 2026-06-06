@@ -54,11 +54,6 @@ import com.example.tikstok.ui.invest.UpColor
 import com.example.tikstok.ui.invest.formatDateTime
 import com.example.tikstok.ui.invest.formatUsd
 
-/**
- * Cash-only ledger reached by tapping the cash-balance card: total deposited and withdrawn on top,
- * then the list of every deposit and withdrawal. Money in/out lives here; buys and sells live in the
- * transaction history instead.
- */
 @Composable
 fun CashHistoryScreen(
     onBack: () -> Unit,
@@ -165,25 +160,36 @@ private fun Header(onBack: () -> Unit) {
 @Composable
 private fun TotalsCard(deposited: Double, withdrawn: Double) {
     Card(Modifier.fillMaxWidth()) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            TotalStat(
-                label = stringResource(R.string.cash_deposited),
-                value = deposited,
-                color = UpColor,
-                modifier = Modifier.weight(1f),
+            Text(
+                text = stringResource(R.string.cash_all_time).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            VerticalDivider(Modifier.height(40.dp))
-            TotalStat(
-                label = stringResource(R.string.cash_withdrawn),
-                value = withdrawn,
-                color = DownColor,
-                modifier = Modifier.weight(1f),
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TotalStat(
+                    label = stringResource(R.string.cash_deposited),
+                    value = deposited,
+                    color = UpColor,
+                    modifier = Modifier.weight(1f),
+                )
+                VerticalDivider(Modifier.height(40.dp))
+                TotalStat(
+                    label = stringResource(R.string.cash_withdrawn),
+                    value = withdrawn,
+                    color = DownColor,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }

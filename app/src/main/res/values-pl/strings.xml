@@ -49,6 +49,8 @@
     <string name="portfolio_total_value">Łączna wartość portfela</string>
     <string name="portfolio_holdings">Aktywa</string>
     <string name="portfolio_sort_value">Sortuj: Wartość</string>
+    <string name="portfolio_sort_profit">Sortuj: Zysk/strata</string>
+    <string name="portfolio_sort_name">Sortuj: Nazwa</string>
     <string name="portfolio_empty">Brak aktywów — kup coś w zakładce Inwestuj.</string>
     <string name="portfolio_add_cash">Dodaj gotówkę</string>
 
@@ -62,6 +64,7 @@
     <string name="cash_current_balance">Aktualne saldo</string>
     <string name="cash_available">Dostępne: %1$s</string>
     <string name="cash_max">Maks.: %1$s</string>
+    <string name="cash_all_time">Od początku</string>
     <string name="cash_deposited">Wpłacono</string>
     <string name="cash_withdrawn">Wypłacono</string>
     <string name="cash_deposit">Wpłać</string>

@@ -5,20 +5,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
-/**
- * Firestore-backed persistence for the portfolio — the source of truth for profiles and their
- * history (Room only caches market data). Layout:
- *
- * ```
- * users/{uid}                       nickname, createdAt, activeProfileId
- *   profiles/{profileId}            id, name, startingBalance, cash, createdAt,
- *                                   holdings[], transactions[], cashEntries[]
- * ```
- *
- * Each profile is one document holding its whole state as arrays, so a trade is a single write.
- * Firestore's on-device persistence (enabled by default on Android) makes reads and queued writes
- * work offline; [PortfolioStore] keeps the live in-memory copy the UI reads.
- */
 object PortfolioRepository {
 
     private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
@@ -26,7 +12,6 @@ object PortfolioRepository {
     private fun userDoc(uid: String) = db.collection("users").document(uid)
     private fun profilesCol(uid: String) = userDoc(uid).collection("profiles")
 
-    /** Everything needed to rebuild the in-memory store for a signed-in user. */
     data class AccountSnapshot(
         val nickname: String?,
         val createdAt: Long?,
@@ -48,7 +33,6 @@ object PortfolioRepository {
         )
     }
 
-    /** Upserts the account-level fields (merged, so it never clobbers the profiles subcollection). */
     suspend fun saveAccount(uid: String, nickname: String, createdAt: Long, activeProfileId: Long) {
         userDoc(uid).set(
             mapOf(
@@ -68,7 +52,10 @@ object PortfolioRepository {
         profilesCol(uid).document(profileId.toString()).delete().await()
     }
 
-    // --- (de)serialization ----------------------------------------------------------------------
+    suspend fun deleteAllUserData(uid: String) {
+        profilesCol(uid).get().await().documents.forEach { it.reference.delete().await() }
+        userDoc(uid).delete().await()
+    }
 
     private fun Profile.toMap(): Map<String, Any?> = mapOf(
         "id" to id,
@@ -107,7 +94,6 @@ object PortfolioRepository {
         )
         profile.cash = getDouble("cash") ?: startingBalance
 
-        // The constructor seeds an initial deposit entry; replace it with whatever was persisted.
         profile.holdings.clear()
         (get("holdings") as? List<Map<String, Any?>>)?.forEach { m ->
             val symbol = m["symbol"] as? String ?: return@forEach

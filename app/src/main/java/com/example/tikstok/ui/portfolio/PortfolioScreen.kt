@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -56,13 +57,6 @@ import com.example.tikstok.ui.invest.plColor
 import com.example.tikstok.ui.invest.formatUnits
 import com.example.tikstok.ui.invest.formatUsd
 
-/**
- * Portfolio overview (deck slide 7): cash balance with top-up, total portfolio value with P/L, and
- * the holdings list. Tapping the total value opens the full transaction history; tapping a holding
- * opens the history pre-filtered to that asset.
- *
- * @param onOpenHistory navigates to the history screen; null symbol means "show everything".
- */
 @Composable
 fun PortfolioScreen(
     onOpenHistory: (String?) -> Unit,
@@ -72,12 +66,17 @@ fun PortfolioScreen(
     viewModel: PortfolioViewModel = viewModel(),
 ) {
     val state = viewModel.uiState
-    // null = closed, true = deposit, false = withdraw
     var cashDialogDeposit by remember { mutableStateOf<Boolean?>(null) }
+    var sort by remember { mutableStateOf(HoldingSort.VALUE) }
 
-    // Re-price on first show, whenever a trade or top-up happens, when the active profile changes,
-    // and when the top-bar refresh button is pressed; reading these snapshot values here is what
-    // makes the effect re-run.
+    val sortedRows = remember(state.rows, sort) {
+        when (sort) {
+            HoldingSort.VALUE -> state.rows.sortedByDescending { it.value }
+            HoldingSort.PROFIT -> state.rows.sortedByDescending { it.profit }
+            HoldingSort.NAME -> state.rows.sortedBy { it.asset.ticker }
+        }
+    }
+
     val tradeTick = PortfolioStore.lastTradeTimestamp
     val activeId = PortfolioStore.active.id
     LaunchedEffect(tradeTick, refreshTick, activeId) { viewModel.refresh(PortfolioStore.positions) }
@@ -97,18 +96,24 @@ fun PortfolioScreen(
         }
         item {
             TotalValueCard(
-                value = state.totalValue,
+                value = state.totalValue + PortfolioStore.cash,
                 profit = state.totalProfit,
                 profitPct = state.totalProfitPct,
                 onClick = { onOpenHistory(null) },
             )
         }
-        item { HoldingsHeader(count = state.rows.size) }
+        item {
+            HoldingsHeader(
+                count = state.rows.size,
+                sort = sort,
+                onCycleSort = { sort = sort.next() },
+            )
+        }
 
         when {
             state.rows.isEmpty() && state.isLoading -> item { LoadingRow() }
             state.rows.isEmpty() -> item { EmptyHoldings() }
-            else -> items(state.rows, key = { it.asset.symbol }) { row ->
+            else -> items(sortedRows, key = { it.asset.symbol }) { row ->
                 HoldingRowCard(row = row, onClick = { onOpenHistory(row.asset.symbol) })
             }
         }
@@ -167,7 +172,6 @@ private fun CashCard(
                     fontWeight = FontWeight.Bold,
                 )
             }
-            // Compact +/− pair — visually one unit, not two separate buttons.
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
@@ -253,8 +257,16 @@ private fun TotalValueCard(value: Double, profit: Double, profitPct: Double, onC
     }
 }
 
+enum class HoldingSort(val labelRes: Int) {
+    VALUE(R.string.portfolio_sort_value),
+    PROFIT(R.string.portfolio_sort_profit),
+    NAME(R.string.portfolio_sort_name);
+
+    fun next(): HoldingSort = entries[(ordinal + 1) % entries.size]
+}
+
 @Composable
-private fun HoldingsHeader(count: Int) {
+private fun HoldingsHeader(count: Int, sort: HoldingSort, onCycleSort: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -267,11 +279,26 @@ private fun HoldingsHeader(count: Int) {
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Text(
-            text = stringResource(R.string.portfolio_sort_value),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .clickable(onClick = onCycleSort)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = stringResource(sort.labelRes),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Icon(
+                imageVector = Icons.Filled.UnfoldMore,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(14.dp),
+            )
+        }
     }
 }
 
@@ -417,4 +444,3 @@ private fun CashAmountDialog(
         },
     )
 }
-

@@ -6,18 +6,10 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** A fetched price series plus the currency it is quoted in. */
 data class PriceSeries(val candles: List<Candle>, val currency: String)
 
-/**
- * Minimal Yahoo Finance chart client. Uses [HttpURLConnection] + org.json directly — no Retrofit
- * yet — mirroring the approach validated in the TestYahoo proof-of-concept.
- *
- * Calls block, so invoke from a background dispatcher (see MarketRepository).
- */
 class YahooFinanceService {
 
-    /** Fetches OHLC candles for [symbol] over the window described by [timeframe]. */
     fun fetchCandles(symbol: String, timeframe: Timeframe): PriceSeries {
         val url = URL(
             "https://query1.finance.yahoo.com/v8/finance/chart/$symbol" +
@@ -49,7 +41,6 @@ class YahooFinanceService {
 
         val candles = ArrayList<Candle>(timestamps.length())
         for (i in 0 until timestamps.length()) {
-            // Yahoo leaves gaps (e.g. illiquid minutes) as nulls — skip those rows.
             if (opens.isNull(i) || highs.isNull(i) || lows.isNull(i) || closes.isNull(i)) continue
             candles += Candle(
                 timestamp = timestamps.getLong(i),

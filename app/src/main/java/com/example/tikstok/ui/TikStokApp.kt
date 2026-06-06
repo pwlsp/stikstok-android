@@ -83,24 +83,16 @@ import kotlin.math.abs
 fun TikStokApp() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
-    // Detail subpages report their parent tab here, so the bottom bar keeps that tab highlighted.
     val current = tabForRoute(backStackEntry?.destination?.route)
-    // Bumped by the top-bar refresh button; InvestScreen re-fetches market data when it changes.
     var refreshTick by remember { mutableStateOf(0) }
-    // Whether the top-bar profile switcher dropdown is showing.
     var profileMenuOpen by remember { mutableStateOf(false) }
-    // Direction the chip name slides on the next profile change: true = up, false = down.
     var profileSlideUp by remember { mutableStateOf(true) }
 
-    // Brief bottom notice shown whenever the cash cap auto-withdrew an excess anywhere in the app.
     val snackbarHostState = remember { SnackbarHostState() }
     val capReachedMessage = stringResource(
         R.string.cash_cap_reached,
         "$" + formatUsd(PortfolioStore.MAX_CASH),
     )
-    // Only react to a *new* cap event, not to the tick value that was already non-zero when this
-    // composition started — otherwise recreating the activity (e.g. a language switch) would
-    // re-show the notice just because the account is already at the cap.
     var lastCapTick by remember { mutableStateOf(PortfolioStore.cashCapTick) }
     val capTick = PortfolioStore.cashCapTick
     LaunchedEffect(capTick) {
@@ -115,13 +107,10 @@ fun TikStokApp() {
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                // Session cash for now; moves to the active profile once Firestore/Room land.
                 title = {
                     val delta = PortfolioStore.lastTradeDelta
                     val ts = PortfolioStore.lastTradeTimestamp
                     val activeId = PortfolioStore.active.id
-                    // Hold the displayed balance at its pre-trade value while the +/- delta shows,
-                    // then reveal the new total — so the effect plays before the number changes.
                     var displayedCash by remember { mutableStateOf(PortfolioStore.cash) }
                     var showDelta by remember(ts) { mutableStateOf(delta != null) }
                     LaunchedEffect(ts) {
@@ -133,7 +122,6 @@ fun TikStokApp() {
                             displayedCash = PortfolioStore.cash
                         }
                     }
-                    // Switching profiles shows the new balance instantly, with no trade effect.
                     LaunchedEffect(activeId) {
                         displayedCash = PortfolioStore.cash
                         showDelta = false
@@ -180,18 +168,11 @@ fun TikStokApp() {
                             contentDescription = stringResource(R.string.cd_refresh),
                         )
                     }
-                    // The chip shows the active profile and opens a dropdown to switch between
-                    // profiles by name; profiles are created and managed on the Account screen.
                     Box(modifier = Modifier.padding(end = 12.dp)) {
-                        // Match the dropdown width to the chip so the menu sits flush under it.
                         var chipWidthPx by remember { mutableStateOf(0) }
                         val density = LocalDensity.current
                         AssistChip(
-                            // With a single profile there's nothing to switch to, so the chip is inert.
                             onClick = { if (PortfolioStore.profiles.size > 1) profileMenuOpen = true },
-                            // Fixed width (~"profile #1") so the chip doesn't jump as names change;
-                            // longer names ellipsize. The name slides when the profile changes —
-                            // up toward the next profile, down toward the previous.
                             label = {
                                 AnimatedContent(
                                     targetState = PortfolioStore.active.id,
@@ -229,8 +210,6 @@ fun TikStokApp() {
                             modifier = Modifier
                                 .width(120.dp)
                                 .onSizeChanged { chipWidthPx = it.width }
-                                // Swipe up = next profile, swipe down = previous; tap still opens
-                                // the dropdown.
                                 .pointerInput(Unit) {
                                     var total = 0f
                                     detectVerticalDragGestures(
@@ -255,18 +234,14 @@ fun TikStokApp() {
                         DropdownMenu(
                             expanded = profileMenuOpen,
                             onDismissRequest = { profileMenuOpen = false },
-                            // Sit just below the chip, same width.
                             offset = DpOffset(0.dp, 4.dp),
                             modifier = Modifier.width(with(density) { chipWidthPx.toDp() }),
-                            // Flat, with the chip's rounded corners, background and outline, so the
-                            // menu reads as the chip itself opened up rather than a floating popup.
                             shape = RoundedCornerShape(8.dp),
                             containerColor = MaterialTheme.colorScheme.background,
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                             tonalElevation = 0.dp,
                             shadowElevation = 0.dp,
                         ) {
-                            // Only the other profiles — the active one is already shown on the chip.
                             val others = PortfolioStore.profiles
                                 .filter { it.id != PortfolioStore.active.id }
                             others.forEachIndexed { index, profile ->
@@ -306,8 +281,6 @@ fun TikStokApp() {
             )
         },
         bottomBar = {
-            // Match the page background so the nav bar blends with the content instead of sitting
-            // on the default tinted surface container.
             NavigationBar(containerColor = MaterialTheme.colorScheme.background) {
                 TikStokDestination.entries.forEach { destination ->
                     NavigationBarItem(
@@ -320,7 +293,6 @@ fun TikStokApp() {
                             )
                         },
                         label = { Text(stringResource(destination.labelRes)) },
-                        // Presentation style: the selected tab just turns copper — no pill behind it.
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.primary,
                             selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -379,13 +351,10 @@ fun TikStokApp() {
     }
 }
 
-// Detail subpages that live "under" a tab. They keep the parent tab highlighted, and tapping that
-// tab pops back out to its main view.
 private const val ROUTE_CASH_HISTORY = "cash_history"
 private const val ROUTE_HISTORY = "history?symbol={symbol}"
 private const val ROUTE_SETTINGS = "settings"
 
-/** The bottom-nav tab a route belongs to, mapping each detail subpage onto its parent tab. */
 private fun tabForRoute(route: String?): TikStokDestination? = when {
     route == null -> null
     route == ROUTE_CASH_HISTORY -> TikStokDestination.PORTFOLIO
@@ -394,11 +363,6 @@ private fun tabForRoute(route: String?): TikStokDestination? = when {
     else -> TikStokDestination.fromRoute(route)
 }
 
-/**
- * Opens a tab's main view from the bottom bar. A nav-bar tap always resets to the first screen:
- * any detail subpages are popped off and no previously saved sub-stack is restored, so e.g. tapping
- * Portfolio while in the transaction history returns to the Portfolio main page.
- */
 private fun androidx.navigation.NavHostController.navigateToTab(destination: TikStokDestination) {
     navigate(destination.route) {
         popUpTo(graph.findStartDestination().id) { inclusive = false }

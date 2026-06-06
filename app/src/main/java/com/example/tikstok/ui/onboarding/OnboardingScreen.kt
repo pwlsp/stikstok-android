@@ -57,12 +57,6 @@ import com.example.tikstok.ui.invest.formatUsd
 
 private const val TOTAL_STEPS = 3
 
-/**
- * First-run intro shown once, right after a brand-new account is created. Three steps: pick a
- * display name, set up the first profile (with the explanation of what profiles are for and the
- * virtual-money caveat), then a welcome. On finish it writes the choices into [PortfolioStore] and
- * hands control back to the gate via [onDone], which drops the user into the app.
- */
 @Composable
 fun OnboardingScreen(
     onDone: () -> Unit,
@@ -70,13 +64,11 @@ fun OnboardingScreen(
 ) {
     var step by rememberSaveable { mutableStateOf(0) }
 
-    // Seed the name from the email's local part so there's a sensible default to accept or edit.
     val suggestedName = remember {
         AuthRepository.currentUser?.email?.substringBefore('@')?.takeIf { it.isNotBlank() }.orEmpty()
     }
     var nickname by rememberSaveable { mutableStateOf(suggestedName) }
     var profileName by rememberSaveable { mutableStateOf("profile #1") }
-    // Plain numeric string (no thousands separators) so it always parses cleanly.
     var amount by rememberSaveable { mutableStateOf("1000") }
 
     val parsed = amount.replace(',', '.').toDoubleOrNull()
@@ -170,10 +162,6 @@ fun OnboardingScreen(
     }
 }
 
-/**
- * A near-screen-wide progress bar split into one segment per step (presentation style). The current
- * and already-completed steps light up in the accent colour; upcoming steps stay muted.
- */
 @Composable
 private fun StepDots(current: Int) {
     Row(

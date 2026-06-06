@@ -57,11 +57,6 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import kotlinx.coroutines.launch
 
-/**
- * Account settings (deck slide 8, right phone): editable account identity, language, and a danger
- * zone. Nickname and email actually update the in-memory account; password, sign out, and delete
- * are presentation-only placeholders until Firebase auth lands.
- */
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
@@ -76,8 +71,6 @@ fun SettingsScreen(
     var confirmSignOut by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
 
-    // Changing the password only applies to email/password accounts — Google accounts have no
-    // password here, so the row is hidden for them entirely.
     val canChangePassword = remember { AuthRepository.isEmailPasswordUser() }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -162,7 +155,6 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_sign_out),
             message = stringResource(R.string.settings_sign_out_message),
             confirmLabel = stringResource(R.string.settings_sign_out),
-            // The auth-state listener in the gate swaps back to the login screen.
             onConfirm = {
                 confirmSignOut = false
                 AuthRepository.signOut()
@@ -182,9 +174,7 @@ fun SettingsScreen(
                 scope.launch {
                     try {
                         AuthRepository.deleteAccount()
-                        // Success: account gone, listener returns us to login.
                     } catch (e: Exception) {
-                        // Firebase rejects deletion of a stale session — ask for a fresh sign-in.
                         Toast.makeText(context, reauthMessage, Toast.LENGTH_LONG).show()
                     }
                 }
@@ -311,7 +301,6 @@ private fun SettingRow(
                 )
                 Spacer(Modifier.width(4.dp))
             }
-            // Only interactive rows get the chevron; a read-only row (e.g. email) shows none.
             if (onClick != null) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -395,11 +384,6 @@ private fun EditFieldDialog(
     )
 }
 
-/**
- * Changes the Firebase password: confirm the current one, type the new one twice. The current
- * password is needed because Firebase requires a fresh re-authentication before it'll update the
- * credential. Only reachable for email/password accounts.
- */
 @Composable
 private fun PasswordDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -417,7 +401,6 @@ private fun PasswordDialog(onDismiss: () -> Unit) {
     val unknownMsg = stringResource(R.string.auth_error_unknown)
 
     val mismatch = confirm.isNotEmpty() && confirm != newPassword
-    // Firebase's minimum is 6 chars; mirror it so the button enables only on a valid new password.
     val valid = !loading && current.isNotBlank() && newPassword.length >= 6 && newPassword == confirm
 
     AlertDialog(

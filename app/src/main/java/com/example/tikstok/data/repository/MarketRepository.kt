@@ -12,13 +12,6 @@ import com.example.tikstok.model.Timeframe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/**
- * Provides market price data to the UI layer, backed by a Room cache so views don't hit the network
- * on every switch. Per request it serves a fresh cached series when one exists (within the frame's
- * [Timeframe.cacheTtlMillis]); otherwise it fetches from Yahoo, stores the result, and returns it.
- * If the fetch fails (e.g. offline) it falls back to whatever is cached, even if stale, so the app
- * keeps working without a connection.
- */
 class MarketRepository(
     private val yahoo: YahooFinanceService = YahooFinanceService(),
     private val dao: MarketCacheDao =
@@ -30,7 +23,6 @@ class MarketRepository(
             val meta = dao.meta(key)
             val now = System.currentTimeMillis()
 
-            // Fresh cache hit — skip the network entirely.
             if (meta != null && now - meta.fetchedAt < timeframe.cacheTtlMillis) {
                 val cached = dao.candles(symbol, timeframe.name)
                 if (cached.isNotEmpty()) {
@@ -48,7 +40,6 @@ class MarketRepository(
                 )
                 series
             } catch (t: Throwable) {
-                // Offline / fetch failed: serve stale cache if we have any, otherwise surface the error.
                 val cached = dao.candles(symbol, timeframe.name)
                 if (cached.isNotEmpty()) {
                     PriceSeries(cached.map { it.toCandle() }, meta?.currency ?: "USD")

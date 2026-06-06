@@ -2,9 +2,6 @@ package com.example.tikstok.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Presentation palette — a dark, near-black UI with a single copper-orange accent.
-
-/** The one accent color: app icon, selected chips, active nav tab, primary buttons. */
 val Copper = Color(0xFFE76B4E)
 
 val AppBackground = Color(0xFF0A0D12)

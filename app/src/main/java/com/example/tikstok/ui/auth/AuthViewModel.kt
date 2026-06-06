@@ -14,14 +14,8 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import kotlinx.coroutines.launch
 
-/** A categorised auth failure; the screen maps each to a localized message. */
 enum class AuthError { INVALID_CREDENTIALS, EMAIL_IN_USE, WEAK_PASSWORD, NETWORK, GOOGLE_FAILED, UNKNOWN }
 
-/**
- * Drives the login/sign-up form: email + password fields, the login↔sign-up mode toggle, the busy
- * flag, and the last error. On success it does nothing visible — the auth-state listener in the gate
- * notices the new user and swaps the login screen for the app.
- */
 class AuthViewModel : ViewModel() {
 
     var email by mutableStateOf("")
@@ -37,11 +31,9 @@ class AuthViewModel : ViewModel() {
     var error by mutableStateOf<AuthError?>(null)
         private set
 
-    /** In sign-up mode the second field must match; only checked there. */
     val passwordsMatch: Boolean
         get() = !isSignUp || confirmPassword == password
 
-    /** Firebase requires a 6-char minimum password; mirror that so the button enables sensibly. */
     val canSubmit: Boolean
         get() = !loading && email.trim().contains('@') && password.length >= 6 && passwordsMatch
 
@@ -57,8 +49,6 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 if (isSignUp) {
-                    // Flag onboarding before the call returns: the gate's auth-state listener flips
-                    // to "signed in" during sign-up, and we want it to land on the intro, not the app.
                     OnboardingState.begin()
                     AuthRepository.signUp(email, password)
                 } else {
@@ -74,7 +64,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    /** Called by the screen once Credential Manager hands back a Google ID token. */
     fun onGoogleToken(idToken: String) {
         loading = true
         error = null
@@ -91,11 +80,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Wipes the typed credentials after a successful sign-in. This ViewModel is activity-scoped, so
-     * it outlives the login screen; without this, signing in (e.g. with Google) and later signing
-     * out would show the previously typed email/password still sitting in the fields.
-     */
     private fun clearForm() {
         email = ""
         password = ""
@@ -104,7 +88,6 @@ class AuthViewModel : ViewModel() {
         error = null
     }
 
-    /** The screen owns the Credential Manager dialog; it reports start/failure of that flow here. */
     fun onGoogleStart() { loading = true; error = null }
     fun onGoogleFailed() { loading = false; error = AuthError.GOOGLE_FAILED }
     fun onGoogleCancelled() { loading = false }

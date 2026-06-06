@@ -13,13 +13,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isUnspecified
 import androidx.compose.ui.unit.sp
 
-/**
- * A single-line [Text] for money values (prices, balances, "you own" amounts) that keeps its
- * design font size when the text fits and shrinks to fit on one line when it doesn't, instead of
- * clipping or ellipsizing. Use it anywhere a value can grow large enough to overflow its slot.
- *
- * The style's font size is the ceiling — the text never grows past it, only down to [minFontSize].
- */
 @Composable
 fun MoneyText(
     text: String,
@@ -30,8 +23,6 @@ fun MoneyText(
     textAlign: TextAlign? = null,
     minFontSize: TextUnit = 8.sp,
 ) {
-    // Fall back to a sensible ceiling if the style has no explicit size (shouldn't happen for the
-    // typography styles we pass, but keeps StepBased from failing on an unspecified max).
     val maxFontSize = if (style.fontSize.isUnspecified) 48.sp else style.fontSize
     Text(
         text = text,

@@ -51,6 +51,8 @@
     <string name="portfolio_total_value">Total Portfolio Value</string>
     <string name="portfolio_holdings">Holdings</string>
     <string name="portfolio_sort_value">Sort: Value</string>
+    <string name="portfolio_sort_profit">Sort: P/L</string>
+    <string name="portfolio_sort_name">Sort: Name</string>
     <string name="portfolio_empty">No holdings yet — buy something on Invest.</string>
     <string name="portfolio_add_cash">Add cash</string>
 
@@ -64,6 +66,7 @@
     <string name="cash_current_balance">Current balance</string>
     <string name="cash_available">Available: %1$s</string>
     <string name="cash_max">Max: %1$s</string>
+    <string name="cash_all_time">All time</string>
     <string name="cash_deposited">Deposited</string>
     <string name="cash_withdrawn">Withdrawn</string>
     <string name="cash_deposit">Deposit</string>

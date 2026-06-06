@@ -51,13 +51,6 @@ import com.example.tikstok.ui.invest.formatPrice
 import com.example.tikstok.ui.invest.formatUnits
 import com.example.tikstok.ui.invest.formatUsd
 
-/**
- * Transaction history as a list, newest first. A row of filter chips at the top limits the visible
- * assets; an empty selection means "show everything".
- *
- * @param initialSymbol pre-selects a single asset's chip (set when arriving from a holding row);
- *   null arrives unfiltered (from the total-portfolio card).
- */
 @Composable
 fun TransactionHistoryScreen(
     initialSymbol: String?,
@@ -65,7 +58,6 @@ fun TransactionHistoryScreen(
     modifier: Modifier = Modifier,
 ) {
     val transactions = PortfolioStore.transactions
-    // Symbols that actually appear in history, in catalog order, mapped to their Asset.
     val assets = remember(transactions.size) {
         val present = transactions.map { it.symbol }.toSet()
         Assets.all.filter { it.symbol in present }

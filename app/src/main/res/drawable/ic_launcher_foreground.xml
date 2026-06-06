@@ -1,27 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  TikStok launcher foreground: a white upward zig-zag chart line with rounded ends and round
-  "node" dots at the two interior vertices. Kept inside the central safe zone so no launcher mask
-  clips it. Drawn white so the monochrome (themed) layer tints cleanly.
--->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- The chart line: rise to a peak, dip to a valley, then a long rise to the top-right. -->
     <path
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="4"
+        android:strokeWidth="4.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000"
-        android:pathData="M32,70 L51,51 L60,59 L76,35" />
-    <!-- Round node dots emphasising the peak and the valley. -->
+        android:pathData="M33,70 L45,57 L55,66 L75,38" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M51,51m-4,0a4,4 0,1 0,8 0a4,4 0,1 0,-8 0z" />
+        android:pathData="M45,57m-4.5,0a4.5,4.5 0,1 0,9 0a4.5,4.5 0,1 0,-9 0z" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M60,59m-4,0a4,4 0,1 0,8 0a4,4 0,1 0,-8 0z" />
+        android:pathData="M55,66m-4.5,0a4.5,4.5 0,1 0,9 0a4.5,4.5 0,1 0,-9 0z" />
 </vector>

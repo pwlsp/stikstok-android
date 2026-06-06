@@ -66,11 +66,6 @@ import kotlinx.coroutines.launch
 
 enum class TradeSide { BUY, SELL }
 
-/**
- * Buy / sell panel from slide 6 of the deck, shown as a bottom sheet. The dollar amount is driven by
- * a slider and the $10/$25/$50/$100/MAX quick-picks; the bottom is a swipe-to-confirm gesture. Every
- * number is laid out on a single line (`softWrap = false`) so values never wrap.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TradeSheet(
@@ -88,7 +83,6 @@ fun TradeSheet(
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         var side by remember { mutableStateOf(initialSide) }
         var amount by remember { mutableStateOf(0.0) }
-        // Reset the amount whenever the user flips between buy and sell.
         LaunchedEffect(side) { amount = 0.0 }
 
         val sideColor = if (side == TradeSide.BUY) UpColor else DownColor
@@ -109,7 +103,6 @@ fun TradeSheet(
             UnitEquivalent(units, asset.ticker)
 
             Spacer(Modifier.height(20.dp))
-            // YOU OWN sits well above the slider, with its own row, so the slider can't overlap it.
             YouOwnRow(holdingQty, holdingValue, asset.ticker)
             Spacer(Modifier.height(12.dp))
             Slider(
@@ -117,7 +110,6 @@ fun TradeSheet(
                 onValueChange = { amount = it.toDouble() },
                 valueRange = 0f..maxAmount.coerceAtLeast(0.01).toFloat(),
                 enabled = maxAmount > 0.0,
-                // Only the filled (chosen) part takes the side color; the rest stays neutral grey.
                 colors = SliderDefaults.colors(
                     thumbColor = sideColor,
                     activeTrackColor = sideColor,
@@ -348,7 +340,6 @@ private fun QuickAmounts(selected: Double, maxAmount: Double, onPick: (Double) -
     }
 }
 
-/** Compact pill that always fits its short label — narrower than a default FilterChip. */
 @Composable
 private fun QuickChip(
     text: String,
@@ -429,7 +420,6 @@ private fun SummaryRow(label: String, value: String, valueColor: Color? = null) 
     }
 }
 
-/** Drag the knob to the far end to confirm. Snaps back if released before ~90% of the track. */
 @Composable
 private fun SwipeToConfirm(label: String, color: Color, enabled: Boolean, onConfirm: () -> Unit) {
     val density = LocalDensity.current
@@ -455,8 +445,6 @@ private fun SwipeToConfirm(label: String, color: Color, enabled: Boolean, onConf
     ) {
         val maxOffsetPx = with(density) { (maxWidth - knob - pad * 2).toPx() }.coerceAtLeast(0f)
 
-        // When the knob is visible, offset the text to the right so it never sits under it at rest.
-        // When disabled (hint text, no knob), center the text freely across the full width.
         Row(
             modifier = Modifier
                 .fillMaxWidth()

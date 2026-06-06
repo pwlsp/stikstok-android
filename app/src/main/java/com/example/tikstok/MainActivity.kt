@@ -38,12 +38,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/**
- * Shows the login screen while signed out, the first-run intro for a brand-new account, a brief
- * loading state while the portfolio syncs from Firestore, and the app otherwise. The swap is driven
- * by Firebase's auth-state listener, so signing in (any method) or signing out flips the UI with no
- * manual navigation.
- */
 @Composable
 private fun AuthGate() {
     var signedIn by remember { mutableStateOf(AuthRepository.currentUser != null) }
@@ -51,12 +45,9 @@ private fun AuthGate() {
         val listener = AuthRepository.addAuthStateListener { user ->
             signedIn = user != null
             if (user == null) {
-                // Signed out: drop any stale onboarding flag and clear the per-user portfolio.
                 OnboardingState.clear()
                 PortfolioStore.reset()
             } else {
-                // Bind the user so write-through works immediately (incl. during onboarding), and
-                // mirror the real email into the in-memory account.
                 PortfolioStore.bindUser(user.uid)
                 user.email?.let { PortfolioStore.updateEmail(it) }
             }
@@ -64,7 +55,6 @@ private fun AuthGate() {
         onDispose { AuthRepository.removeAuthStateListener(listener) }
     }
 
-    // A returning user (not onboarding) loads their profiles from Firestore before the app shows.
     val needsLoad = signedIn && !OnboardingState.pending && !PortfolioStore.loaded
     LaunchedEffect(needsLoad) {
         if (needsLoad) AuthRepository.currentUser?.uid?.let { PortfolioStore.load(it) }
@@ -78,7 +68,6 @@ private fun AuthGate() {
     }
 }
 
-/** Full-screen spinner shown while the signed-in user's portfolio loads from Firestore. */
 @Composable
 private fun LoadingScreen() {
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {

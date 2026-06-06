@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-/** Simple centered title + message used by the not-yet-built screens. */
 @Composable
 fun PlaceholderContent(
     title: String,

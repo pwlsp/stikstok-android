@@ -15,7 +15,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-/** One holding enriched with its live price so the screen can show value and unrealized P/L. */
 data class HoldingRow(
     val asset: Asset,
     val quantity: Double,
@@ -47,7 +46,6 @@ class PortfolioViewModel : ViewModel() {
 
     private var loadJob: Job? = null
 
-    /** Re-prices every open position. Call when the screen appears or after a trade. */
     fun refresh(positions: Map<String, com.example.tikstok.data.portfolio.Holding>) {
         loadJob?.cancel()
         if (positions.isEmpty()) {
@@ -62,7 +60,7 @@ class PortfolioViewModel : ViewModel() {
                     async {
                         val price = runCatching {
                             repository.candles(symbol, Timeframe.D1).candles.lastOrNull()?.close?.toDouble()
-                        }.getOrNull() ?: holding.avgCost // fall back to cost basis if the fetch fails
+                        }.getOrNull() ?: holding.avgCost
                         HoldingRow(asset, holding.quantity, holding.avgCost, price)
                     }
                 }.awaitAll()

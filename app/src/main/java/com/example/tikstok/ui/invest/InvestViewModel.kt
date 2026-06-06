@@ -15,7 +15,6 @@ import com.example.tikstok.model.Timeframe
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/** How the price series is drawn: scrollable detail candles, or a whole-range line overview. */
 enum class ChartMode { CANDLES, LINE }
 
 data class InvestUiState(
@@ -23,7 +22,6 @@ data class InvestUiState(
     val timeframe: Timeframe = Timeframe.DEFAULT,
     val candles: List<Candle> = emptyList(),
     val currency: String = "USD",
-    /** Candle the user is scrubbing to with the crosshair; null means "show the latest". */
     val selectedIndex: Int? = null,
     val chartMode: ChartMode = ChartMode.CANDLES,
     val isLoading: Boolean = false,
@@ -45,20 +43,16 @@ class InvestViewModel : ViewModel() {
 
     fun selectAsset(asset: Asset) {
         if (asset == uiState.asset) return
-        // Drop the previous asset's candles so the chart shows a spinner, not stale data.
         uiState = uiState.copy(asset = asset, candles = emptyList(), selectedIndex = null)
         reload()
     }
 
     fun selectTimeframe(timeframe: Timeframe) {
         if (timeframe == uiState.timeframe) return
-        // Keep existing candles visible while the new period loads so the buttons stay enabled
-        // and the chart doesn't flash a spinner on every period switch.
         uiState = uiState.copy(timeframe = timeframe, selectedIndex = null)
         reload()
     }
 
-    /** Updates the crosshair selection as the user drags over the chart. */
     fun selectCandle(index: Int?) {
         uiState = uiState.copy(selectedIndex = index)
     }
@@ -68,15 +62,10 @@ class InvestViewModel : ViewModel() {
         uiState = uiState.copy(chartMode = next)
     }
 
-    // --- Trading (session-only, in-memory portfolio) ---
-
-    /** Spendable virtual cash. Snapshot-backed, so reading it in composition stays live. */
     val cash: Double get() = PortfolioStore.cash
 
-    /** Latest traded price for the current asset, or null while data is still loading. */
     val currentPrice: Double? get() = uiState.candles.lastOrNull()?.close?.toDouble()
 
-    /** The user's current position in the selected asset. */
     fun holding(): Holding? = PortfolioStore.holding(uiState.asset.symbol)
 
     fun buy(amountUsd: Double) {
@@ -97,7 +86,6 @@ class InvestViewModel : ViewModel() {
             val timeframe = uiState.timeframe
             try {
                 val series = repository.candles(asset.symbol, timeframe)
-                // Ignore a result that arrived after the user moved on to another asset/timeframe.
                 if (asset != uiState.asset || timeframe != uiState.timeframe) return@launch
                 uiState = uiState.copy(
                     candles = series.candles,

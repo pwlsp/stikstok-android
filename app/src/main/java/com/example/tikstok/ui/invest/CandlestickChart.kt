@@ -37,16 +37,6 @@ import java.util.Date
 internal val UpColor = Color(0xFF22C55E)
 internal val DownColor = Color(0xFFE76B4E)
 
-/**
- * Candlestick chart drawn on a [Canvas].
- *
- * Press-and-drag over the plot scrubs a crosshair and reports the touched index via [onSelect].
- * Each candle gets at least a minimum width, so when the series is denser than the viewport (e.g.
- * 5 years of weekly candles) the chart becomes horizontally scrollable via the bar underneath —
- * panning lives on the scrollbar, scrubbing on the chart, so the two gestures never fight.
- *
- * @param selectedIndex highlighted candle, or null to draw without a crosshair.
- */
 @Composable
 fun CandlestickChart(
     candles: List<Candle>,
@@ -66,28 +56,19 @@ fun CandlestickChart(
 
     BoxWithConstraints(modifier) {
         val viewportPx = constraints.maxWidth.toFloat()
-        // Empty strips around the plot for the axis labels. The left gutter is wide enough to
-        // hold a price label, so the labels sit in free space instead of over the candles.
         val plotLeft = with(density) { 40.dp.toPx() }
         val plotRight = with(density) { 8.dp.toPx() }
         val topPad = with(density) { 8.dp.toPx() }
-        // Extra bottom room so the lowest price label clears the x-axis time labels underneath it.
         val bottomPad = with(density) { 30.dp.toPx() }
         val labelX = with(density) { 2.dp.toPx() }
-        // The minimum slot only applies to the scrollable frames — it's what makes a dense series
-        // overflow and scroll. Non-scrollable frames have no minimum, so their candles always size
-        // to fill the width exactly and can never spill into a scrollbar on a narrow screen.
         val minSlot = if (timeframe.isScrollable) with(density) { 8.dp.toPx() } else 0f
 
         val plotWidth = (viewportPx - plotLeft - plotRight).coerceAtLeast(1f)
         val count = candles.size.coerceAtLeast(1)
-        // A "slot" is the horizontal space per candle. Honour the minimum, which is what forces
-        // scrolling once the series no longer fits.
         val slot = maxOf(minSlot, plotWidth / count)
         val contentWidth = slot * count
         val maxOffset = (contentWidth - plotWidth).coerceAtLeast(0f)
 
-        // Start scrolled to the most recent candle whenever the data or viewport changes.
         var offset by remember(candles, viewportPx) { mutableStateOf(maxOffset) }
 
         fun indexAtScreenX(x: Float): Int =
@@ -115,7 +96,6 @@ fun CandlestickChart(
                 if (candles.isEmpty()) return@Canvas
                 val plotH = size.height - topPad - bottomPad
 
-                // The visible window drives the price scale, so scrolling behaves like a zoom.
                 val firstVisible = indexAtScreenX(plotLeft)
                 val lastVisible = indexAtScreenX(plotLeft + plotWidth)
                 val window = candles.subList(firstVisible, lastVisible + 1)
@@ -134,14 +114,11 @@ fun CandlestickChart(
                 val centerPaint = Paint(labelPaint).apply { textAlign = Paint.Align.CENTER }
                 val rightPaint = Paint(labelPaint).apply { textAlign = Paint.Align.RIGHT }
 
-                // Horizontal grid lines behind the plot.
                 listOf(max, (max + min) / 2f, min).forEach { price ->
                     val y = yAt(price)
                     drawLine(gridColor, Offset(plotLeft, y), Offset(plotLeft + plotWidth, y), 1f)
                 }
 
-                // Time labels pinned to the left / center / right of the viewport, aligned so they
-                // don't clip at the edges.
                 val baseY = size.height - 6f
                 drawContext.canvas.nativeCanvas.drawText(
                     timeFmt.format(Date(candles[indexAtScreenX(plotLeft)].timestamp * 1000L)),
@@ -160,10 +137,7 @@ fun CandlestickChart(
                 val leftBound = plotLeft - slot
                 val rightBound = plotLeft + plotWidth + slot
 
-                // Clip the candles and crosshair to the plot square so the edge candles can't
-                // bleed into the left price-label gutter or past the right edge.
                 clipRect(left = plotLeft, top = topPad, right = plotLeft + plotWidth, bottom = topPad + plotH) {
-                    // Crosshair behind the candles so the highlighted body still reads clearly.
                     val selected = selectedIndex?.coerceIn(0, candles.size - 1)
                     if (selected != null) {
                         val sx = screenXAt(selected)
@@ -186,7 +160,6 @@ fun CandlestickChart(
                         )
                     }
 
-                    // Outline marker on top of the selected candle.
                     if (selected != null) {
                         val sx = screenXAt(selected)
                         if (sx in leftBound..rightBound) {
@@ -204,8 +177,6 @@ fun CandlestickChart(
                     }
                 }
 
-                // Price labels drawn after the plot so they sit above the graph, each on a small
-                // rounded chip so it stays legible over the candles and grid.
                 listOf(max, (max + min) / 2f, min).forEach { price ->
                     val text = formatPrice(price)
                     val baselineY = yAt(price) + labelPaint.textSize / 3f
@@ -224,9 +195,6 @@ fun CandlestickChart(
                 }
             }
 
-            // Always reserve the scrollbar's vertical strip (6dp gap + 8dp bar) so the candle plot
-            // keeps the same height whether or not a frame scrolls — the bar just appears in the
-            // pre-reserved space instead of pushing the plot. dp-based, so it holds on any density.
             Spacer(Modifier.height(6.dp))
             if (maxOffset > 0f) {
                 ChartScrollbar(

@@ -73,11 +73,6 @@ import com.example.tikstok.ui.invest.isFlatUsd
 import com.example.tikstok.ui.invest.plColor
 import com.example.tikstok.ui.invest.formatUsd
 
-/**
- * Account home (deck slide 8): the user header with a settings entry point, the list of profiles —
- * each its own isolated portfolio, the active one highlighted — and a card to spin up a new one.
- * Tapping a profile makes it active; the whole app then follows that profile.
- */
 @Composable
 fun AccountScreen(
     onOpenSettings: () -> Unit,
@@ -86,13 +81,9 @@ fun AccountScreen(
     viewModel: AccountViewModel = viewModel(),
 ) {
     var showCreate by remember { mutableStateOf(false) }
-    // The profile whose rename/delete sheet is open, and the one pending delete confirmation.
     var managing by remember { mutableStateOf<Profile?>(null) }
     var deleting by remember { mutableStateOf<Profile?>(null) }
 
-    // Price every profile on first show, when a profile is added, and when the top-bar refresh
-    // button is pressed — deliberately NOT keyed on the active profile, so switching profiles
-    // doesn't re-fetch and flash the cards back to a loading/cost-basis state.
     val profileCount = PortfolioStore.profiles.size
     LaunchedEffect(refreshTick, profileCount) { viewModel.refresh(PortfolioStore.profiles) }
 
@@ -310,8 +301,6 @@ private fun StatsPanel(cash: Double, portfolioValue: Double, profitPct: Double, 
             .padding(vertical = 12.dp, horizontal = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Cash/portfolio carry the wide dollar values, so they get the room; P/L is just a short
-        // percent, so it takes a narrower share and ends up pushed toward the right edge.
         Stat(
             label = stringResource(R.string.account_stat_cash),
             value = "$" + formatUsd(cash),
@@ -395,7 +384,6 @@ private fun CreateProfileCard(onClick: () -> Unit) {
     }
 }
 
-/** Rename a profile, or open the delete confirmation. Shown when a profile card is tapped. */
 @Composable
 private fun ManageProfileDialog(
     profile: Profile,
@@ -454,7 +442,6 @@ private fun ManageProfileDialog(
     )
 }
 
-/** Confirms permanently removing a profile and its holdings/history. */
 @Composable
 private fun DeleteProfileDialog(
     profile: Profile,
@@ -491,7 +478,6 @@ private fun CreateProfileDialog(
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf(PortfolioStore.defaultProfileName()) }
-    // Plain numeric string (no thousands separators) so it always parses cleanly.
     var amount by remember { mutableStateOf("1000") }
     val parsed = amount.replace(',', '.').toDoubleOrNull()
     val valid = parsed != null && parsed > 0.0 && parsed <= PortfolioStore.MAX_CASH
@@ -550,7 +536,6 @@ private fun CreateProfileDialog(
     )
 }
 
-/** A rounded dashed outline, used to signal the "add a profile" affordance. */
 private fun Modifier.dashedBorder(color: Color): Modifier = drawBehind {
     val stroke = Stroke(
         width = 1.5.dp.toPx(),
