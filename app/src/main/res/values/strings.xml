@@ -127,6 +127,10 @@
 
     <!-- Authentication -->
     <string name="auth_tagline">Practice trading US stocks and crypto with virtual money.</string>
+    <string name="auth_subtitle_sign_in">Sign in to your account</string>
+    <string name="auth_subtitle_sign_up">Create a new account</string>
+    <string name="auth_confirm_password">Confirm password</string>
+    <string name="auth_password_mismatch">Passwords don\'t match</string>
     <string name="auth_sign_in">Sign in</string>
     <string name="auth_sign_up">Create account</string>
     <string name="auth_or">or</string>

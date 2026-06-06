@@ -27,6 +27,8 @@ class AuthViewModel : ViewModel() {
         private set
     var password by mutableStateOf("")
         private set
+    var confirmPassword by mutableStateOf("")
+        private set
     var isSignUp by mutableStateOf(false)
         private set
     var loading by mutableStateOf(false)
@@ -34,13 +36,18 @@ class AuthViewModel : ViewModel() {
     var error by mutableStateOf<AuthError?>(null)
         private set
 
+    /** In sign-up mode the second field must match; only checked there. */
+    val passwordsMatch: Boolean
+        get() = !isSignUp || confirmPassword == password
+
     /** Firebase requires a 6-char minimum password; mirror that so the button enables sensibly. */
     val canSubmit: Boolean
-        get() = !loading && email.trim().contains('@') && password.length >= 6
+        get() = !loading && email.trim().contains('@') && password.length >= 6 && passwordsMatch
 
     fun onEmailChange(value: String) { email = value; error = null }
     fun onPasswordChange(value: String) { password = value; error = null }
-    fun toggleMode() { isSignUp = !isSignUp; error = null }
+    fun onConfirmPasswordChange(value: String) { confirmPassword = value; error = null }
+    fun toggleMode() { isSignUp = !isSignUp; confirmPassword = ""; error = null }
 
     fun submit() {
         if (!canSubmit) return
@@ -50,6 +57,7 @@ class AuthViewModel : ViewModel() {
             try {
                 if (isSignUp) AuthRepository.signUp(email, password)
                 else AuthRepository.signIn(email, password)
+                clearForm()
             } catch (e: Exception) {
                 error = e.toAuthError()
             } finally {
@@ -65,12 +73,26 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 AuthRepository.signInWithGoogle(idToken)
+                clearForm()
             } catch (e: Exception) {
                 error = AuthError.GOOGLE_FAILED
             } finally {
                 loading = false
             }
         }
+    }
+
+    /**
+     * Wipes the typed credentials after a successful sign-in. This ViewModel is activity-scoped, so
+     * it outlives the login screen; without this, signing in (e.g. with Google) and later signing
+     * out would show the previously typed email/password still sitting in the fields.
+     */
+    private fun clearForm() {
+        email = ""
+        password = ""
+        confirmPassword = ""
+        isSignUp = false
+        error = null
     }
 
     /** The screen owns the Credential Manager dialog; it reports start/failure of that flow here. */

@@ -1,5 +1,6 @@
 package com.example.tikstok.ui.auth
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -98,10 +99,15 @@ fun LoginScreen(
             color = MaterialTheme.colorScheme.primary,
         )
         Spacer(Modifier.height(6.dp))
+        // Switches with the mode so it's obvious whether you're signing in or creating an account.
         Text(
-            text = stringResource(R.string.auth_tagline),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = stringResource(
+                if (viewModel.isSignUp) R.string.auth_subtitle_sign_up
+                else R.string.auth_subtitle_sign_in,
+            ),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(32.dp))
@@ -149,6 +155,35 @@ fun LoginScreen(
             enabled = !viewModel.loading,
             modifier = Modifier.fillMaxWidth(),
         )
+
+        // Only in sign-up mode — its appearance makes the mode change unmistakable.
+        AnimatedVisibility(visible = viewModel.isSignUp) {
+            val mismatch = viewModel.confirmPassword.isNotEmpty() &&
+                viewModel.confirmPassword != viewModel.password
+            Column {
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = viewModel.confirmPassword,
+                    onValueChange = viewModel::onConfirmPasswordChange,
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.auth_confirm_password)) },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                    isError = mismatch,
+                    supportingText = if (mismatch) {
+                        { Text(stringResource(R.string.auth_password_mismatch)) }
+                    } else {
+                        null
+                    },
+                    enabled = !viewModel.loading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
 
         viewModel.error?.let { err ->
             Spacer(Modifier.height(10.dp))
