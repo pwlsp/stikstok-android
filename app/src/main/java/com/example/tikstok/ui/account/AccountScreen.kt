@@ -63,11 +63,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tikstok.R
 import com.example.tikstok.data.portfolio.PortfolioStore
 import com.example.tikstok.data.portfolio.Profile
+import com.example.tikstok.ui.components.MoneyText
 import com.example.tikstok.ui.invest.DownColor
 import com.example.tikstok.ui.invest.UpColor
 import com.example.tikstok.ui.invest.formatMonthYear
 import com.example.tikstok.ui.invest.formatSignedPercent
 import com.example.tikstok.ui.invest.formatSignedUsd
+import com.example.tikstok.ui.invest.isFlatUsd
+import com.example.tikstok.ui.invest.plColor
 import com.example.tikstok.ui.invest.formatUsd
 
 /**
@@ -236,14 +239,15 @@ private fun ProfileCard(
     onLongClick: () -> Unit,
 ) {
     val up = profit >= 0.0
-    val plColor = if (up) UpColor else DownColor
+    val flat = isFlatUsd(profit)
+    val plColor = plColor(profit)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         border = if (isActive) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
-        Column(Modifier.padding(14.dp)) {
+        Column(Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -253,17 +257,19 @@ private fun ProfileCard(
                         maxLines = 1,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (up) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
-                            contentDescription = null,
-                            tint = plColor,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
+                        if (!flat) {
+                            Icon(
+                                imageVector = if (up) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                                contentDescription = null,
+                                tint = plColor,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                        MoneyText(
                             text = formatSignedUsd(profit) + " " + stringResource(R.string.account_all_time),
                             style = MaterialTheme.typography.bodySmall,
                             color = plColor,
-                            maxLines = 1,
+                            modifier = Modifier.weight(1f, fill = false),
                         )
                     }
                 }
@@ -301,8 +307,11 @@ private fun StatsPanel(cash: Double, portfolioValue: Double, profitPct: Double, 
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-            .padding(vertical = 12.dp, horizontal = 14.dp),
+            .padding(vertical = 12.dp, horizontal = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        // Cash/portfolio carry the wide dollar values, so they get the room; P/L is just a short
+        // percent, so it takes a narrower share and ends up pushed toward the right edge.
         Stat(
             label = stringResource(R.string.account_stat_cash),
             value = "$" + formatUsd(cash),
@@ -317,7 +326,7 @@ private fun StatsPanel(cash: Double, portfolioValue: Double, profitPct: Double, 
             label = stringResource(R.string.account_stat_pl),
             value = formatSignedPercent(profitPct.toFloat()),
             valueColor = plColor,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(0.7f),
         )
     }
 }
@@ -335,12 +344,11 @@ private fun Stat(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Text(
+        MoneyText(
             text = value,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             color = valueColor ?: MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
         )
     }
 }

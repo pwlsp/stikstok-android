@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import com.example.tikstok.R
 import com.example.tikstok.data.portfolio.Holding
 import com.example.tikstok.model.Asset
+import com.example.tikstok.ui.components.MoneyText
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
@@ -255,12 +256,10 @@ private fun AmountDisplay(amount: Double, onClick: () -> Unit = {}) {
             softWrap = false,
         )
         Spacer(Modifier.width(2.dp))
-        Text(
+        MoneyText(
             text = parts[0],
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            softWrap = false,
         )
         Text(
             text = "." + parts.getOrElse(1) { "00" },
@@ -314,12 +313,13 @@ private fun YouOwnRow(quantity: Double, value: Double, ticker: String) {
             maxLines = 1,
             softWrap = false,
         )
-        Text(
+        Spacer(Modifier.width(8.dp))
+        MoneyText(
             text = "${formatUnits(quantity)} $ticker  ·  $" + formatUsd(value),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            softWrap = false,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -397,7 +397,7 @@ private fun TradeSummary(side: TradeSide, price: Double, amount: Double, units: 
             SummaryRow(
                 label = stringResource(R.string.trade_potential_profit),
                 value = formatSignedUsd(profit),
-                valueColor = if (profit >= 0.0) UpColor else DownColor,
+                valueColor = plColor(profit),
             )
             SummaryRow(stringResource(R.string.trade_you_receive), "$" + formatUsd(amount))
         }

@@ -40,15 +40,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tikstok.R
 import com.example.tikstok.data.portfolio.PortfolioStore
+import com.example.tikstok.ui.components.MoneyText
 import com.example.tikstok.ui.invest.AssetAvatar
 import com.example.tikstok.ui.invest.DownColor
 import com.example.tikstok.ui.invest.UpColor
 import com.example.tikstok.ui.invest.formatSignedPercent
 import com.example.tikstok.ui.invest.formatSignedUsd
+import com.example.tikstok.ui.invest.isFlatUsd
+import com.example.tikstok.ui.invest.plColor
 import com.example.tikstok.ui.invest.formatUnits
 import com.example.tikstok.ui.invest.formatUsd
 
@@ -71,10 +75,12 @@ fun PortfolioScreen(
     // null = closed, true = deposit, false = withdraw
     var cashDialogDeposit by remember { mutableStateOf<Boolean?>(null) }
 
-    // Re-price on first show, whenever a trade or top-up happens, and when the top-bar refresh
-    // button is pressed; reading these snapshot values here is what makes the effect re-run.
+    // Re-price on first show, whenever a trade or top-up happens, when the active profile changes,
+    // and when the top-bar refresh button is pressed; reading these snapshot values here is what
+    // makes the effect re-run.
     val tradeTick = PortfolioStore.lastTradeTimestamp
-    LaunchedEffect(tradeTick, refreshTick) { viewModel.refresh(PortfolioStore.positions) }
+    val activeId = PortfolioStore.active.id
+    LaunchedEffect(tradeTick, refreshTick, activeId) { viewModel.refresh(PortfolioStore.positions) }
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -155,7 +161,7 @@ private fun CashCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Text(
+                MoneyText(
                     text = "$" + formatUsd(cash),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
@@ -194,7 +200,8 @@ private fun CashCard(
 @Composable
 private fun TotalValueCard(value: Double, profit: Double, profitPct: Double, onClick: () -> Unit) {
     val up = profit >= 0.0
-    val color = if (up) UpColor else DownColor
+    val flat = isFlatUsd(profit)
+    val color = plColor(profit)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,10 +219,11 @@ private fun TotalValueCard(value: Double, profit: Double, profitPct: Double, onC
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
+            MoneyText(
                 text = "$" + formatUsd(value),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
             )
             Row(
                 modifier = Modifier
@@ -225,12 +233,14 @@ private fun TotalValueCard(value: Double, profit: Double, profitPct: Double, onC
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Icon(
-                    imageVector = if (up) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(14.dp),
-                )
+                if (!flat) {
+                    Icon(
+                        imageVector = if (up) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
                 Text(
                     text = formatSignedUsd(profit) + " (" + formatSignedPercent(profitPct.toFloat()) + ")",
                     style = MaterialTheme.typography.labelLarge,
@@ -268,6 +278,7 @@ private fun HoldingsHeader(count: Int) {
 @Composable
 private fun HoldingRowCard(row: HoldingRow, onClick: () -> Unit) {
     val up = row.profit >= 0.0
+    val flat = isFlatUsd(row.profit)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -295,13 +306,12 @@ private fun HoldingRowCard(row: HoldingRow, onClick: () -> Unit) {
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(
+                MoneyText(
                     text = "$" + formatUsd(row.value),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
                 )
-                val color = if (up) UpColor else DownColor
+                val color = plColor(row.profit)
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
@@ -310,12 +320,14 @@ private fun HoldingRowCard(row: HoldingRow, onClick: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
-                    Icon(
-                        imageVector = if (up) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
-                        contentDescription = null,
-                        tint = color,
-                        modifier = Modifier.size(10.dp),
-                    )
+                    if (!flat) {
+                        Icon(
+                            imageVector = if (up) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
+                            contentDescription = null,
+                            tint = color,
+                            modifier = Modifier.size(10.dp),
+                        )
+                    }
                     Text(
                         text = formatSignedUsd(row.profit),
                         style = MaterialTheme.typography.labelSmall,

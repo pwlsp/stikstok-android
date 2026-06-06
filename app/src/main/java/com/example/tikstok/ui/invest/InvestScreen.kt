@@ -1,5 +1,6 @@
 package com.example.tikstok.ui.invest
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CandlestickChart
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.Button
@@ -43,6 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tikstok.R
+import com.example.tikstok.ui.components.MoneyText
+import com.example.tikstok.data.portfolio.Holding
+import com.example.tikstok.model.Asset
 import com.example.tikstok.model.Candle
 import com.example.tikstok.model.Timeframe
 
@@ -66,23 +72,36 @@ fun InvestScreen(
     ) {
         // The chart card sits slightly wider (8dp insets) than the rest of the content (16dp).
         val sidePadding = Modifier.padding(horizontal = 16.dp)
+        // The chart card takes whatever vertical space is left after the fixed-size controls
+        // below, so it grows on tall screens and shrinks on short ones without clipping anything.
         ChartCard(
             state = state,
             onSelectCandle = viewModel::selectCandle,
             onRetry = viewModel::reload,
             onToggleMode = viewModel::toggleChartMode,
-            modifier = Modifier.padding(horizontal = 8.dp),
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .weight(1f),
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
         TimeframeSelector(
             selected = state.timeframe,
             onSelect = viewModel::selectTimeframe,
             modifier = sidePadding,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(14.dp))
         AssetHeader(state = state, onClick = { showPicker = true }, modifier = sidePadding)
-        Spacer(Modifier.weight(1f))
-        Spacer(Modifier.height(24.dp))
+        val ownedPrice = viewModel.currentPrice
+        if (ownedPrice != null) {
+            Spacer(Modifier.height(10.dp))
+            HoldingLine(
+                asset = state.asset,
+                holding = viewModel.holding(),
+                price = ownedPrice,
+                modifier = sidePadding,
+            )
+        }
+        Spacer(Modifier.height(16.dp))
         TradeButtons(
             enabled = viewModel.currentPrice != null,
             onBuy = { tradeSide = TradeSide.BUY },
@@ -130,8 +149,9 @@ private fun AssetHeader(state: InvestUiState, onClick: () -> Unit, modifier: Mod
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column {
-            Text(
+        // Weighted so a large price (e.g. BTC) shrinks to fit rather than shoving the asset chip.
+        Column(modifier = Modifier.weight(1f)) {
+            MoneyText(
                 text = latest?.let { "$" + formatPrice(it.close) } ?: "—",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
@@ -139,11 +159,11 @@ private fun AssetHeader(state: InvestUiState, onClick: () -> Unit, modifier: Mod
             Text(
                 text = formatSignedPercent(changePct),
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (changePct >= 0f) UpColor else DownColor,
+                color = plColorPct(changePct),
             )
         }
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.width(8.dp))
 
         Row(
             modifier = Modifier
@@ -176,6 +196,67 @@ private fun AssetHeader(state: InvestUiState, onClick: () -> Unit, modifier: Mod
     }
 }
 
+/**
+ * One-line summary of the user's position in the selected asset: units owned and current value on
+ * the left, unrealized P/L in dollars and percent on the right — the same pill/format used on the
+ * Portfolio holding tiles. Always shown; with no position it just states 0 units and drops the P/L.
+ */
+@Composable
+private fun HoldingLine(asset: Asset, holding: Holding?, price: Double, modifier: Modifier = Modifier) {
+    val quantity = holding?.quantity ?: 0.0
+    val value = quantity * price
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.trade_you_own).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            MoneyText(
+                text = formatUnits(quantity) + " " + asset.ticker + " · $" + formatUsd(value),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+        if (holding != null && holding.quantity > 0.0) {
+            Spacer(Modifier.width(8.dp))
+            val profit = value - holding.quantity * holding.avgCost
+            val profitPct =
+                if (holding.avgCost > 0.0) (price - holding.avgCost) / holding.avgCost * 100.0 else 0.0
+            val flat = isFlatUsd(profit)
+            val color = plColor(profit)
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(color.copy(alpha = 0.15f))
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (!flat) {
+                    Icon(
+                        imageVector = if (profit >= 0.0) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+                Text(
+                    text = formatSignedUsd(profit) + " (" + formatSignedPercent(profitPct.toFloat()) + ")",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = color,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun ChartCard(
     state: InvestUiState,
@@ -185,7 +266,11 @@ private fun ChartCard(
     modifier: Modifier = Modifier,
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 12.dp),
+        ) {
             val readoutCandle = state.candles.getOrNull(
                 state.selectedIndex ?: state.candles.lastIndex,
             )
@@ -208,7 +293,7 @@ private fun ChartCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(290.dp),
+                    .weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
                 val showLine = state.chartMode == ChartMode.LINE && state.timeframe.isScrollable

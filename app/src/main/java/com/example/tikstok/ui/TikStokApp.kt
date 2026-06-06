@@ -32,6 +32,9 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -61,6 +64,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.tikstok.R
 import com.example.tikstok.data.portfolio.PortfolioStore
+import com.example.tikstok.ui.components.MoneyText
 import com.example.tikstok.navigation.TikStokDestination
 import com.example.tikstok.ui.account.AccountScreen
 import com.example.tikstok.ui.account.SettingsScreen
@@ -88,7 +92,27 @@ fun TikStokApp() {
     // Direction the chip name slides on the next profile change: true = up, false = down.
     var profileSlideUp by remember { mutableStateOf(true) }
 
+    // Brief bottom notice shown whenever the cash cap auto-withdrew an excess anywhere in the app.
+    val snackbarHostState = remember { SnackbarHostState() }
+    val capReachedMessage = stringResource(
+        R.string.cash_cap_reached,
+        "$" + formatUsd(PortfolioStore.MAX_CASH),
+    )
+    // Only react to a *new* cap event, not to the tick value that was already non-zero when this
+    // composition started — otherwise recreating the activity (e.g. a language switch) would
+    // re-show the notice just because the account is already at the cap.
+    var lastCapTick by remember { mutableStateOf(PortfolioStore.cashCapTick) }
+    val capTick = PortfolioStore.cashCapTick
+    LaunchedEffect(capTick) {
+        if (capTick != lastCapTick) {
+            lastCapTick = capTick
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(message = capReachedMessage, duration = SnackbarDuration.Short)
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 // Session cash for now; moves to the active profile once Firestore/Room land.
@@ -126,7 +150,7 @@ fun TikStokApp() {
                         if (showing && delta != null) {
                             val color = if (delta >= 0) UpColor else DownColor
                             val sign = if (delta >= 0) "+" else "-"
-                            Text(
+                            MoneyText(
                                 text = "$sign$" + formatUsd(abs(delta)),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
@@ -140,7 +164,7 @@ fun TikStokApp() {
                                     fontWeight = FontWeight.Bold,
                                     color = UpColor,
                                 )
-                                Text(
+                                MoneyText(
                                     text = formatUsd(displayedCash),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,

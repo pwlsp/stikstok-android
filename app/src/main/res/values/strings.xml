@@ -73,6 +73,7 @@
     <string name="cash_entry_deposit">Deposit</string>
     <string name="cash_entry_withdrawal">Withdrawal</string>
     <string name="cash_empty">No cash movements yet.</string>
+    <string name="cash_cap_reached">Maximum balance %1$s reached — anything above is withdrawn.</string>
 
     <!-- Common -->
     <string name="action_cancel">Cancel</string>

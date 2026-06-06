@@ -71,6 +71,7 @@
     <string name="cash_entry_deposit">Wpłata</string>
     <string name="cash_entry_withdrawal">Wypłata</string>
     <string name="cash_empty">Brak operacji gotówkowych.</string>
+    <string name="cash_cap_reached">Osiągnięto maksymalne saldo %1$s — nadwyżka zostanie wypłacona.</string>
 
     <!-- Common -->
     <string name="action_cancel">Anuluj</string>

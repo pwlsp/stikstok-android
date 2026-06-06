@@ -1,9 +1,33 @@
 package com.example.tikstok.ui.invest
 
+import androidx.compose.ui.graphics.Color
 import com.example.tikstok.model.Timeframe
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+/** Light neutral for a flat (≈0) P/L, so a zero change reads as neither a gain nor a loss. */
+val FlatColor = Color(0xFFB8B8B8)
+
+/** True when a USD amount rounds to $0.00 at the two decimals we display. */
+fun isFlatUsd(value: Double): Boolean = kotlin.math.abs(value) < 0.005
+
+/** True when a percent rounds to 0.00% at the two decimals we display. */
+fun isFlatPercent(percent: Float): Boolean = kotlin.math.abs(percent) < 0.005f
+
+/** Gain → green, loss → red, flat (≈0) → neutral. Driven by a USD P/L amount. */
+fun plColor(value: Double): Color = when {
+    isFlatUsd(value) -> FlatColor
+    value > 0 -> UpColor
+    else -> DownColor
+}
+
+/** Gain → green, loss → red, flat (≈0) → neutral. Driven by a percent change. */
+fun plColorPct(percent: Float): Color = when {
+    isFlatPercent(percent) -> FlatColor
+    percent > 0 -> UpColor
+    else -> DownColor
+}
 
 /**
  * Formats a price with a sensible number of decimals for its magnitude — BTC (~$100k) needs none
@@ -16,13 +40,15 @@ fun formatPrice(value: Float): String = when {
     else -> "%.6f".format(value)
 }
 
-fun formatSignedPercent(percent: Float): String = "%+.2f%%".format(percent)
+fun formatSignedPercent(percent: Float): String =
+    if (isFlatPercent(percent)) "0.00%" else "%+.2f%%".format(percent)
 
 /** A USD amount, always two decimals with thousands separators, e.g. "1,001.92". */
 fun formatUsd(value: Double): String = "%,.2f".format(Locale.US, value)
 
 /** A signed USD amount for P/L readouts, e.g. "+$7.42" / "-$0.43". */
 fun formatSignedUsd(value: Double): String {
+    if (isFlatUsd(value)) return "$%,.2f".format(Locale.US, 0.0)
     val sign = if (value >= 0) "+" else "-"
     return "$sign$%,.2f".format(Locale.US, kotlin.math.abs(value))
 }

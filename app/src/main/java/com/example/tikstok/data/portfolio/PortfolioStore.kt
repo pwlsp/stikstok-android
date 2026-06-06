@@ -48,7 +48,7 @@ object PortfolioStore {
     const val MAX_CASH = 1_000_000.0
 
     /** Starting-balance options offered when creating a new profile. */
-    val STARTING_BALANCES = listOf(500.0, 1_000.0, 5_000.0, 10_000.0)
+    val STARTING_BALANCES = listOf(500.0, 1_000.0, 5_000.0, 10_000.0, 100_000.0)
 
     private var nextId = 1L
 
@@ -73,6 +73,10 @@ object PortfolioStore {
     var lastTradeDelta by mutableStateOf<Double?>(null)
         private set
     var lastTradeTimestamp by mutableStateOf(0L)
+        private set
+
+    /** Bumped each time the cash cap auto-withdrew an excess, so the UI can flag it to the user. */
+    var cashCapTick by mutableStateOf(0)
         private set
 
     init {
@@ -181,6 +185,7 @@ object PortfolioStore {
         val now = System.currentTimeMillis()
         active.cashEntries.add(CashEntry(CashFlowType.WITHDRAWAL, excess, now))
         markDelta(-excess, now)
+        cashCapTick++
     }
 
     /** Take cash out of the active profile's wallet, capped at the available balance. */
