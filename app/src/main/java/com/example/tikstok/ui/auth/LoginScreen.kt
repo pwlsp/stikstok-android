@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -75,6 +76,9 @@ fun LoginScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            // Edge-to-edge is on, so keep content clear of the status/nav bars and, crucially, let
+            // the keyboard shrink the scroll area instead of covering the sign-in button.
+            .safeDrawingPadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp),
         verticalArrangement = Arrangement.Center,
