@@ -85,8 +85,8 @@ fun LoginScreen(
         Glowing(
             color = MaterialTheme.colorScheme.primary,
             shape = RoundedCornerShape(24.dp),
-            radius = 50.dp,
-            alpha = 0.72f,
+            radius = 40.dp,
+            alpha = 0.40f,
         ) {
             Text(
                 text = stringResource(R.string.app_name),
